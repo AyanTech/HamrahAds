@@ -22,14 +22,18 @@ import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConsta
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 
-class ShowNativeAds constructor(
+class ShowNativeAds(
     private val context: Context,
     private var viewGroup: ViewGroup,
     private val listener: HamrahAdsInitListener
 ) {
+    private val job = SupervisorJob()
+    private val ioScope = CoroutineScope(Dispatchers.IO + job)
+
     init {
         val native = PreferenceDataStoreHelper(context.applicationContext).getPreferenceNative(
             PreferenceDataStoreConstants.HamrahAdsNative,
@@ -80,8 +84,13 @@ class ShowNativeAds constructor(
                                     onStart = { placeholder ->
                                     },
                                     onSuccess = { result ->
-                                        childView.setImageDrawable(result.asDrawable(Resources.getSystem()))
-                                        CoroutineScope(Dispatchers.IO).launch {
+                                        imageLoader.enqueue(
+                                            ImageRequest.Builder(context.applicationContext)
+                                                .target(childView)
+                                                .data(result.asDrawable(Resources.getSystem()))
+                                                .build()
+                                        )
+                                        ioScope.launch {
                                             native.trackers?.impression?.let {
                                                 BannerAdsRepository(NetworkModule(context.applicationContext))
                                                     .impression(it)
@@ -90,6 +99,7 @@ class ShowNativeAds constructor(
                                                 PreferenceDataStoreConstants.HamrahAdsNative
                                             )
                                         }
+                                        listener.onSuccess()
                                     },
                                     onError = { error ->
                                         listener.onError(NetworkError().getError(5))
@@ -105,7 +115,7 @@ class ShowNativeAds constructor(
                 R.id.hamrah_ad_native_cta_view -> {
                     if (childView is View) {
                         childView.setOnClickListener {
-                            CoroutineScope(Dispatchers.IO).launch {
+                            ioScope.launch {
                                 native.trackers?.click?.let {
                                     BannerAdsRepository(NetworkModule(context.applicationContext)).click(
                                         it
@@ -117,5 +127,9 @@ class ShowNativeAds constructor(
                 }
             }
         }
+    }
+
+    fun destroyAds() {
+        job.cancel()
     }
 }

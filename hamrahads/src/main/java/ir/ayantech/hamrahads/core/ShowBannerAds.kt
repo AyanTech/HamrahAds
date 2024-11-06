@@ -1,17 +1,17 @@
 package ir.ayantech.hamrahads.core
 
 import android.app.Activity
-import android.graphics.drawable.Drawable
+import android.content.res.Resources
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatImageView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
+import coil3.ImageLoader
+import coil3.asDrawable
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.target
 import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
@@ -24,15 +24,20 @@ import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConsta
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 
-class ShowBannerAds constructor(
+class ShowBannerAds (
     private val activity: Activity,
     private val size: HamrahAdsBannerType,
     private var viewGroup: ViewGroup? = null,
     private val listener: HamrahAdsInitListener
 ) {
+    private lateinit var container: FrameLayout
+    private val job = SupervisorJob()
+    private val ioScope = CoroutineScope(Dispatchers.IO + job)
+
     init {
         val banner = PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBanner(
             PreferenceDataStoreConstants.HamrahAdsBanner,
@@ -56,7 +61,7 @@ class ShowBannerAds constructor(
         width = UnitUtils.dpToPx(width, activity.applicationContext)
         height = UnitUtils.dpToPx(height, activity.applicationContext)
 
-        val adContainer = FrameLayout(activity)
+        container = FrameLayout(activity)
         val params = FrameLayout.LayoutParams(
             width,
             height
@@ -65,7 +70,7 @@ class ShowBannerAds constructor(
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             }
         }
-        adContainer.layoutParams = params
+        container.layoutParams = params
 
         val adImage = AppCompatImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -74,7 +79,7 @@ class ShowBannerAds constructor(
             )
             scaleType = ImageView.ScaleType.FIT_XY
             setOnClickListener {
-                CoroutineScope(Dispatchers.IO).launch {
+                ioScope.launch {
                     banner.trackers?.click?.let {
                         BannerAdsRepository(NetworkModule(activity.applicationContext)).click(it)
                     }
@@ -89,44 +94,58 @@ class ShowBannerAds constructor(
             HamrahAdsBannerType.BANNER_1136x640 -> banner.banner1136x640
         }
 
-        CoroutineScope(Dispatchers.Main).launch {
-            Glide.with(activity.applicationContext)
-                .load(bannerImage)
-                .listener(object : RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        listener.onError(NetworkError().getError(5))
-                        return false
+        val imageLoader = ImageLoader.Builder(activity.applicationContext)
+            .build()
+
+        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
+            .data(bannerImage)
+            .target(
+                onStart = { placeholder ->
+                },
+                onSuccess = { result ->
+                    imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
+                        .target(adImage)
+                        .data(result.asDrawable(Resources.getSystem()))
+                        .build())
+
+                    if (viewGroup != null) {
+                        val paramViewGroup = viewGroup?.layoutParams
+                        paramViewGroup?.width = width
+                        paramViewGroup?.height = height
+                        viewGroup?.layoutParams = paramViewGroup
+                        viewGroup?.addView(container, paramViewGroup)
+                    } else {
+                        activity.addContentView(container, params)
                     }
+                    container.addView(adImage)
 
-                    override fun onResourceReady(
-                        resource: Drawable,
-                        model: Any,
-                        target: Target<Drawable>?,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean
-                    ): Boolean {
-
-                        adContainer.addView(adImage)
-                        if (viewGroup != null) {
-                            val paramViewGroup = viewGroup?.layoutParams
-                            paramViewGroup?.width = width
-                            paramViewGroup?.height = height
-                            viewGroup?.layoutParams = paramViewGroup
-                            viewGroup?.addView(adContainer, paramViewGroup)
-                        } else {
-                            activity.addContentView(adContainer, params)
+                    ioScope.launch {
+                        banner.trackers?.impression?.let {
+                            BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                                it
+                            )
                         }
-
-                        listener.onSuccess()
-                        return false
+                        PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
+                            PreferenceDataStoreConstants.HamrahAdsBanner
+                        )
                     }
-                }).into(adImage)
-        }
+                    listener.onSuccess()
+                },
+                onError = { error ->
+                    destroyAds()
+                    listener.onError(NetworkError().getError(5))
+                }
+            )
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .build())
+    }
+
+    fun destroyAds() {
+        job.cancel()
+
+        if (::container.isInitialized)
+            container.removeAllViews()
     }
 
     private fun hasBannerImage(size: HamrahAdsBannerType, banner: NetworkBannerAd): Boolean {

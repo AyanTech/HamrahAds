@@ -54,6 +54,5 @@ dependencies {
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.play.services.ads.identifier)
     implementation(libs.coil.network.okhttp)
-    implementation("io.coil-kt.coil3:coil-gif:3.0.0")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation(libs.coil.gif)
 }

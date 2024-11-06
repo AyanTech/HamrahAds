@@ -24,18 +24,6 @@ data class NetworkInterstitialAd(
     @SerialName("interstitial_banner")
     var interstitialBanner: String? = null,
 
-    @SerialName("banner_320x50")
-    var banner320x50: String? = null,
-
-    @SerialName("banner_1136x640")
-    var banner1136x640: String? = null,
-
-    @SerialName("banner_640x1136")
-    var banner640x1136: String? = null,
-
-    @SerialName("video")
-    var video: String? = null,
-
     @SerialName("landing_type")
     var landingType: Int? = null,
 

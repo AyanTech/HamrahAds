@@ -7,16 +7,16 @@ import android.net.Uri
 
 
 fun handleIntent(context: Context, type: Int?, data: String?) {
+
     val intent: Intent? = when (type) {
         1, 2, 3, 6, 7 -> Intent(Intent.ACTION_VIEW, Uri.parse(data))
 
-        4 -> Intent(Intent.ACTION_SENDTO).apply {
-            Uri.parse("sms:$data")
-            putExtra("sms_body", "Sample message")
+        4 -> {
+            openSmsApp(data)
         }
 
-        5 -> Intent(Intent.ACTION_DIAL).apply {
-            Uri.parse(data)
+        5 -> {
+            openPhoneApp(data)
         }
 
         else -> null
@@ -32,24 +32,35 @@ fun handleIntent(context: Context, type: Int?, data: String?) {
 }
 
 
-fun openPhoneApp(phoneNumber: String, context: Context) {
+fun openPhoneApp(data: String?): Intent {
     val intent = Intent(Intent.ACTION_DIAL)
-    intent.data = Uri.parse("tel:$phoneNumber")
-    context.startActivity(intent)
+    intent.data = Uri.parse(data)
+    return intent
 }
 
-fun openSmsApp(phoneNumber: String?, message: String?, context: Context) {
-    val intent = Intent(Intent.ACTION_SENDTO).apply {
-        data = Uri.parse("smsto:")
-        if (phoneNumber != null) {
-            putExtra("address", phoneNumber)
+fun openSmsApp(text: String?): Intent? {
+    val regex = Regex("sms:(\\d{11})\\?body=(.+)")
+    if (text != null) {
+        val matchResult = regex.find(text)
+        if (matchResult != null) {
+            val phoneNumber = matchResult.groups[1]?.value
+            val message = matchResult.groups[2]?.value
+
+            if (!phoneNumber.isNullOrEmpty() && !message.isNullOrEmpty()) {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("smsto:")
+                    putExtra("address", phoneNumber)
+                    putExtra("sms_body", message)
+                }
+                return intent
+            } else {
+                return null
+            }
+        } else {
+            return null
         }
-        if (message != null) {
-            putExtra("sms_body", message)
-        }
-    }
-    if (intent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(intent)
+    } else {
+        return null
     }
 }
 

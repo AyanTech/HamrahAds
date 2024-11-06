@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.res.Resources
 import android.graphics.Color
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
+import coil3.request.target
 import coil3.request.transformations
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.shape.CornerFamily
@@ -34,10 +36,11 @@ import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConsta
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 
-class ShowInterstitialAds constructor(
+class ShowInterstitialAds(
     private val activity: Activity,
     private val listener: HamrahAdsInitListener
 ) {
@@ -57,6 +60,10 @@ class ShowInterstitialAds constructor(
 
     private var imageLoaderCount = 0
 
+    private val job = SupervisorJob()
+    private val ioScope = CoroutineScope(Dispatchers.IO + job)
+    private val mainScope = CoroutineScope(Dispatchers.Main + job)
+
     init {
         val interstitial =
             PreferenceDataStoreHelper(activity.applicationContext).getPreferenceInterstitial(
@@ -65,8 +72,8 @@ class ShowInterstitialAds constructor(
             )
         if (interstitial?.interstitialTemplate != null) {
             when (interstitial.interstitialTemplate) {
-                0 -> initView1(interstitial)
-                1 -> initView2(interstitial)
+                1 -> initView1(interstitial)
+                2 -> initView2(interstitial)
                 3 -> initView3(interstitial)
             }
         } else {
@@ -76,6 +83,7 @@ class ShowInterstitialAds constructor(
 
     private fun initView3(interstitial: NetworkInterstitialAd) {
         if (interstitial.webTemplateUrl.isNullOrEmpty()) {
+            destroyAds()
             listener.onError(NetworkError().getError(6))
             return
         }
@@ -89,24 +97,27 @@ class ShowInterstitialAds constructor(
             )
             setBackgroundColor(Color.WHITE)
         }
-        urlWebView = WebView(activity.applicationContext).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
-            settings.javaScriptEnabled = true
+        mainScope.launch {
+            Log.i("qewfgopijhqeopig",interstitial.webTemplateUrl.toString())
+            urlWebView = WebView(activity.applicationContext).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                    gravity = Gravity.CENTER
+                }
+                settings.javaScriptEnabled = true
 
-            webViewClient = object : WebViewClient() {
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
-                    loadContainer(interstitial)
+                webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        Log.i("qewfgopijhqeopig","onPageFinished")
+                        loadContainer(interstitial)
+                    }
                 }
             }
+            interstitial.webTemplateUrl?.let { urlWebView.loadUrl(it) }
         }
-        interstitial.webTemplateUrl?.let { urlWebView.loadUrl(it) }
-
         countdownTextView = TextView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ((screenSize[1] * 0.07)).toInt(),
@@ -138,7 +149,7 @@ class ShowInterstitialAds constructor(
             visibility = View.GONE
             gravity = Gravity.CENTER
             setOnClickListener {
-                finishAds()
+                destroyAds()
             }
         }
     }
@@ -151,6 +162,7 @@ class ShowInterstitialAds constructor(
             || interstitial.trackers?.click.isNullOrEmpty()
             || interstitial.trackers?.impression.isNullOrEmpty()
         ) {
+            destroyAds()
             listener.onError(NetworkError().getError(6))
             return
         }
@@ -248,13 +260,13 @@ class ShowInterstitialAds constructor(
                     .build()
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                 bottomMargin = (screenSize[0] * 0.15).toInt()
-                setBackgroundColor(Color.BLUE)
+                setBackgroundColor(activity.applicationContext.getColor(R.color.color_2))
                 setTextColor(Color.WHITE)
                 textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
                 text = interstitial.cta
                 setOnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    ioScope.launch {
                         interstitial.trackers?.click?.let {
                             InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
                                 it
@@ -302,22 +314,29 @@ class ShowInterstitialAds constructor(
             visibility = View.GONE
             gravity = Gravity.CENTER
             setOnClickListener {
-                finishAds()
+                destroyAds()
             }
         }
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
             .build()
+
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
             .target(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    backgroundImageView.setImageDrawable(result.asDrawable(Resources.getSystem()))
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(backgroundImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
                     loadContainer(interstitial)
                 },
                 onError = { error ->
+                    destroyAds()
                     listener.onError(NetworkError().getError(5))
                 }
             )
@@ -331,10 +350,16 @@ class ShowInterstitialAds constructor(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    iconImageView.setImageDrawable(result.asDrawable(Resources.getSystem()))
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(iconImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
                     loadContainer(interstitial)
                 },
                 onError = { error ->
+                    destroyAds()
                     listener.onError(NetworkError().getError(5))
                 }
             )
@@ -351,6 +376,7 @@ class ShowInterstitialAds constructor(
             || interstitial.trackers?.click.isNullOrEmpty()
             || interstitial.trackers?.impression.isNullOrEmpty()
         ) {
+            destroyAds()
             listener.onError(NetworkError().getError(6))
             return
         }
@@ -381,6 +407,7 @@ class ShowInterstitialAds constructor(
                 (screenSize[0] * 0.2).toInt()
             ).apply {
                 gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                scaleType = ImageView.ScaleType.FIT_CENTER
                 topMargin = (screenSize[0] * 0.1).toInt()
             }
             scaleType = ImageView.ScaleType.FIT_XY
@@ -414,6 +441,23 @@ class ShowInterstitialAds constructor(
             gravity = Gravity.CENTER
         }
 
+        descriptionTextView = TextView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.TOP
+                topMargin = (screenSize[0] * 0.52).toInt()
+                textSize = UnitUtils.pxToDp(40f, activity.applicationContext)
+                rightMargin = 32
+                leftMargin = 32
+                setTextColor(Color.BLACK)
+                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                text = interstitial.description
+            }
+            gravity = Gravity.CENTER
+        }
+
         installButton = MaterialButton(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ((screenSize[1] * 0.6)).toInt(),
@@ -424,13 +468,13 @@ class ShowInterstitialAds constructor(
                     .build()
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                 bottomMargin = (screenSize[0] * 0.1).toInt()
-                setBackgroundColor(Color.BLUE)
+                setBackgroundColor(activity.applicationContext.getColor(R.color.color_2))
                 setTextColor(Color.WHITE)
                 textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
                 text = interstitial.cta
                 setOnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    ioScope.launch {
                         interstitial.trackers?.click?.let {
                             InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
                                 it
@@ -478,7 +522,7 @@ class ShowInterstitialAds constructor(
             visibility = View.GONE
             gravity = Gravity.CENTER
             setOnClickListener {
-                finishAds()
+                destroyAds()
             }
         }
 
@@ -495,10 +539,16 @@ class ShowInterstitialAds constructor(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    backgroundImageView.setImageDrawable(result.asDrawable(Resources.getSystem()))
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(backgroundImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
                     loadContainer(interstitial)
                 },
                 onError = { error ->
+                    destroyAds()
                     listener.onError(NetworkError().getError(5))
                 }
             )
@@ -512,10 +562,16 @@ class ShowInterstitialAds constructor(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    indexImageView.setImageDrawable(result.asDrawable(Resources.getSystem()))
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(indexImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
                     loadContainer(interstitial)
                 },
                 onError = { error ->
+                    destroyAds()
                     listener.onError(NetworkError().getError(5))
                 }
             )
@@ -529,10 +585,16 @@ class ShowInterstitialAds constructor(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    iconImageView.setImageDrawable(result.asDrawable(Resources.getSystem()))
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(iconImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
                     loadContainer(interstitial)
                 },
                 onError = { error ->
+                    destroyAds()
                     listener.onError(NetworkError().getError(5))
                 }
             )
@@ -591,7 +653,7 @@ class ShowInterstitialAds constructor(
         (activity.findViewById<View>(android.R.id.content) as ViewGroup).addView(
             container
         )
-        CoroutineScope(Dispatchers.IO).launch {
+        ioScope.launch {
             interstitial.trackers?.impression?.let {
                 InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(it)
             }
@@ -600,6 +662,7 @@ class ShowInterstitialAds constructor(
                 PreferenceDataStoreConstants.HamrahAdsInterstitial
             )
         }
+        listener.onSuccess()
     }
 
     private fun timeToSkip(seconds: Int) {
@@ -630,13 +693,15 @@ class ShowInterstitialAds constructor(
             }
 
             override fun onFinish() {
-                finishAds()
+                destroyAds()
             }
         }
         countDownTimerOut.start()
     }
 
-    private fun finishAds() {
+    fun destroyAds() {
+        job.cancel()
+
         if (::urlWebView.isInitialized)
             urlWebView.destroy()
 
@@ -646,6 +711,7 @@ class ShowInterstitialAds constructor(
         if (::countDownTimerSkip.isInitialized)
             countDownTimerSkip.cancel()
 
-        container.removeAllViews()
+        if (::container.isInitialized)
+            container.removeAllViews()
     }
 }
