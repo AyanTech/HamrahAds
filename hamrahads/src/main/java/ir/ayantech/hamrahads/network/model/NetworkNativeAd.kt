@@ -31,7 +31,7 @@ data class NetworkNativeAd(
     var video: String? = null,
 
     @SerialName("landing_type")
-    var landingType: String? = null,
+    var landingType: Int? = null,
 
     @SerialName("landing_link")
     var landingLink: String? = null,

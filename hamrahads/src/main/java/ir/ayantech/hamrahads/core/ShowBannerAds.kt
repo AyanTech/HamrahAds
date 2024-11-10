@@ -2,6 +2,7 @@ package ir.ayantech.hamrahads.core
 
 import android.app.Activity
 import android.content.res.Resources
+import android.graphics.Color
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -69,6 +70,7 @@ class ShowBannerAds (
             if (viewGroup == null) {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             }
+
         }
         container.layoutParams = params
 

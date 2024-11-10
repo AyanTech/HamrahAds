@@ -1,19 +1,27 @@
 package ir.ayantech.hamrahads.core
 
 import BlurTransformation
-import android.app.Activity
 import android.content.res.Resources
 import android.graphics.Color
+import android.net.http.SslError
 import android.os.CountDownTimer
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.SslErrorHandler
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import coil3.ImageLoader
 import coil3.asDrawable
@@ -21,9 +29,6 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.target
 import coil3.request.transformations
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.shape.CornerFamily
-import com.google.android.material.textview.MaterialTextView
 import ir.ayantech.hamrahads.R
 import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
@@ -41,22 +46,25 @@ import kotlinx.coroutines.launch
 
 
 class ShowInterstitialAds(
-    private val activity: Activity,
+    private val activity: AppCompatActivity,
     private val listener: HamrahAdsInitListener
 ) {
     private lateinit var container: FrameLayout
+    private lateinit var countdownCardView: CardView
     private lateinit var countdownTextView: TextView
-    private lateinit var closeTextView: MaterialTextView
     private lateinit var backgroundImageView: ImageView
     private lateinit var indexImageView: ImageView
     private lateinit var iconImageView: ImageView
     private lateinit var iconTitleTextView: TextView
     private lateinit var titleTextView: TextView
     private lateinit var descriptionTextView: TextView
-    private lateinit var installButton: MaterialButton
+    private lateinit var installCardView: CardView
     private lateinit var urlWebView: WebView
     private lateinit var countDownTimerSkip: CountDownTimer
     private lateinit var countDownTimerOut: CountDownTimer
+
+    private lateinit var allView: ViewGroup
+    private var isBackPressed = true
 
     private var imageLoaderCount = 0
 
@@ -95,10 +103,9 @@ class ShowInterstitialAds(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(Color.RED)
         }
         mainScope.launch {
-            Log.i("qewfgopijhqeopig",interstitial.webTemplateUrl.toString())
             urlWebView = WebView(activity.applicationContext).apply {
                 layoutParams = FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
@@ -107,50 +114,99 @@ class ShowInterstitialAds(
                     gravity = Gravity.CENTER
                 }
                 settings.javaScriptEnabled = true
-
                 webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
-                        Log.i("qewfgopijhqeopig","onPageFinished")
                         loadContainer(interstitial)
+                    }
+
+                    override fun onReceivedSslError(
+                        view: WebView?,
+                        handler: SslErrorHandler?,
+                        error: SslError?
+                    ) {
+                        super.onReceivedSslError(view, handler, error)
+                        listener.onError(NetworkError().getError(7))
+                    }
+
+                    override fun onReceivedHttpError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        errorResponse: WebResourceResponse?
+                    ) {
+                        super.onReceivedHttpError(view, request, errorResponse)
+                        listener.onError(NetworkError().getError(7))
+                    }
+
+                    override fun onReceivedError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        error: WebResourceError?
+                    ) {
+                        super.onReceivedError(view, request, error)
+                        listener.onError(NetworkError().getError(7))
                     }
                 }
             }
-            interstitial.webTemplateUrl?.let { urlWebView.loadUrl(it) }
+            interstitial.webTemplateUrl?.let {
+                urlWebView.loadUrl(it)
+            }
         }
-        countdownTextView = TextView(activity).apply {
+        countdownCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.07)).toInt(),
+                FrameLayout.LayoutParams.WRAP_CONTENT,
                 ((screenSize[1] * 0.07)).toInt()
             ).apply {
+                topMargin = 24
+                rightMargin = 24
                 gravity = Gravity.TOP or Gravity.END
-                topMargin = 16
-                rightMargin = 16
             }
-            typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-            textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-            setTextColor(Color.DKGRAY)
-            gravity = Gravity.CENTER
-        }
+            setCardBackgroundColor(Color.WHITE)
+            cardElevation = 6f
+            radius = 50f
 
-        closeTextView = MaterialTextView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.07)).toInt(),
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = 16
-                rightMargin = 16
+            val linear = LinearLayout(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                }
+                gravity = Gravity.CENTER
+
+                countdownTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ((screenSize[1] * 0.15)).toInt(),
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        maxLines = 1
+                    }
+                    gravity = Gravity.CENTER
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
+                    setTextColor(Color.BLACK)
+                }
+
+                val closeTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        marginEnd = 20
+                    }
+                    text = resources.getText(R.string.hamrah_ads_font_close)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
+                    setTextColor(Color.BLACK)
+                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
+                    setOnClickListener {
+                        if (isBackPressed) {
+                            destroyAds()
+                        }
+                    }
+                }
+                addView(countdownTextView)
+                addView(closeTextView)
             }
-            text = resources.getText(R.string.hamrah_ads_font_close)
-            typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-            setTextColor(Color.DKGRAY)
-            textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-            visibility = View.GONE
-            gravity = Gravity.CENTER
-            setOnClickListener {
-                destroyAds()
-            }
+            addView(linear)
         }
     }
 
@@ -250,72 +306,102 @@ class ShowInterstitialAds(
             gravity = Gravity.CENTER
         }
 
-        installButton = MaterialButton(activity).apply {
+        installCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ((screenSize[1] * 0.6)).toInt(),
                 (screenSize[1] * 0.15).toInt()
             ).apply {
-                shapeAppearanceModel = shapeAppearanceModel.toBuilder()
-                    .setAllCorners(CornerFamily.ROUNDED, (screenSize[1] * 0.075).toFloat())
-                    .build()
+                bottomMargin = (screenSize[0] * 0.14).toInt()
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                bottomMargin = (screenSize[0] * 0.15).toInt()
-                setBackgroundColor(activity.applicationContext.getColor(R.color.color_2))
-                setTextColor(Color.WHITE)
-                textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
-                text = interstitial.cta
-                setOnClickListener {
-                    ioScope.launch {
-                        interstitial.trackers?.click?.let {
-                            InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
-                                it
-                            )
+            }
+            setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_2))
+            cardElevation = 12f
+            radius = 100f
+
+            val installButton = TextView(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                ).apply {
+                    setTextColor(Color.WHITE)
+                    textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
+                    text = interstitial.cta
+                    setOnClickListener {
+                        ioScope.launch {
+                            interstitial.trackers?.click?.let {
+                                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
+                                    it
+                                )
+                            }
+                        }
+                        handleIntent(
+                            activity,
+                            interstitial.landingType,
+                            interstitial.landingLink
+                        )
+                    }
+                }
+                gravity = Gravity.CENTER
+            }
+            addView(installButton)
+        }
+
+        countdownCardView = CardView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                ((screenSize[1] * 0.07)).toInt()
+            ).apply {
+                topMargin = 24
+                rightMargin = 24
+                gravity = Gravity.TOP or Gravity.END
+            }
+            setCardBackgroundColor(Color.WHITE)
+            cardElevation = 6f
+            radius = 50f
+
+            val linear = LinearLayout(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                }
+                gravity = Gravity.CENTER
+
+                countdownTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ((screenSize[1] * 0.15)).toInt(),
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        maxLines = 1
+                    }
+                    gravity = Gravity.CENTER
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
+                    setTextColor(Color.BLACK)
+                }
+
+                val closeTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        marginEnd = 20
+                    }
+                    text = resources.getText(R.string.hamrah_ads_font_close)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
+                    setTextColor(Color.BLACK)
+                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
+                    setOnClickListener {
+                        if (isBackPressed) {
+                            destroyAds()
                         }
                     }
-                    handleIntent(
-                        context.applicationContext,
-                        interstitial.landingType,
-                        interstitial.landingLink
-                    )
                 }
+                addView(countdownTextView)
+                addView(closeTextView)
             }
-            gravity = Gravity.CENTER
-        }
-
-        countdownTextView = TextView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.07)).toInt(),
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = 16
-                rightMargin = 16
-            }
-            typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-            textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-            setTextColor(Color.DKGRAY)
-            gravity = Gravity.CENTER
-        }
-
-        closeTextView = MaterialTextView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.07)).toInt(),
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = 16
-                rightMargin = 16
-            }
-            text = resources.getText(R.string.hamrah_ads_font_close)
-            typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-            setTextColor(Color.DKGRAY)
-            textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-            visibility = View.GONE
-            gravity = Gravity.CENTER
-            setOnClickListener {
-                destroyAds()
-            }
+            addView(linear)
         }
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
@@ -391,6 +477,7 @@ class ShowInterstitialAds(
             setBackgroundColor(Color.WHITE)
         }
 
+
         backgroundImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -458,72 +545,101 @@ class ShowInterstitialAds(
             gravity = Gravity.CENTER
         }
 
-        installButton = MaterialButton(activity).apply {
+        installCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ((screenSize[1] * 0.6)).toInt(),
                 (screenSize[1] * 0.15).toInt()
             ).apply {
-                shapeAppearanceModel = shapeAppearanceModel.toBuilder()
-                    .setAllCorners(CornerFamily.ROUNDED, (screenSize[1] * 0.075).toFloat())
-                    .build()
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                 bottomMargin = (screenSize[0] * 0.1).toInt()
-                setBackgroundColor(activity.applicationContext.getColor(R.color.color_2))
-                setTextColor(Color.WHITE)
-                textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-                text = interstitial.cta
-                setOnClickListener {
-                    ioScope.launch {
-                        interstitial.trackers?.click?.let {
-                            InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
-                                it
-                            )
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            }
+            setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_2))
+            cardElevation = 12f
+            radius = 100f
+
+            val installButton = TextView(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                ).apply {
+                    setTextColor(Color.WHITE)
+                    textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
+                    text = interstitial.cta
+                    setOnClickListener {
+                        ioScope.launch {
+                            interstitial.trackers?.click?.let {
+                                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
+                                    it
+                                )
+                            }
+                        }
+                        handleIntent(
+                            activity,
+                            interstitial.landingType,
+                            interstitial.landingLink
+                        )
+                    }
+                }
+                gravity = Gravity.CENTER
+            }
+            addView(installButton)
+        }
+        countdownCardView = CardView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                ((screenSize[1] * 0.07)).toInt()
+            ).apply {
+                topMargin = 24
+                rightMargin = 24
+                gravity = Gravity.TOP or Gravity.END
+            }
+            setCardBackgroundColor(Color.WHITE)
+            cardElevation = 6f
+            radius = 50f
+
+            val linear = LinearLayout(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                }
+                gravity = Gravity.CENTER
+
+                countdownTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ((screenSize[1] * 0.15)).toInt(),
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        maxLines = 1
+                    }
+                    gravity = Gravity.CENTER
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
+                    setTextColor(Color.BLACK)
+                }
+
+                val closeTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        marginEnd = 20
+                    }
+                    text = resources.getText(R.string.hamrah_ads_font_close)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
+                    setTextColor(Color.BLACK)
+                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
+                    setOnClickListener {
+                        if (isBackPressed) {
+                            destroyAds()
                         }
                     }
-                    handleIntent(
-                        context.applicationContext,
-                        interstitial.landingType,
-                        interstitial.landingLink
-                    )
                 }
+                addView(countdownTextView)
+                addView(closeTextView)
             }
-            gravity = Gravity.CENTER
-        }
-
-        countdownTextView = TextView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.07)).toInt(),
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = 16
-                rightMargin = 16
-            }
-            typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-            textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-            setTextColor(Color.DKGRAY)
-            gravity = Gravity.CENTER
-        }
-
-        closeTextView = MaterialTextView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.07)).toInt(),
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = 16
-                rightMargin = 16
-            }
-            text = resources.getText(R.string.hamrah_ads_font_close)
-            typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-            setTextColor(Color.DKGRAY)
-            textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-            visibility = View.GONE
-            gravity = Gravity.CENTER
-            setOnClickListener {
-                destroyAds()
-            }
+            addView(linear)
         }
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
@@ -603,12 +719,12 @@ class ShowInterstitialAds(
             .build())
     }
 
+
     private fun loadContainer(interstitial: NetworkInterstitialAd) {
         if (imageLoaderCount != 0) {
             imageLoaderCount--
             return
         }
-
         if (::backgroundImageView.isInitialized)
             container.addView(backgroundImageView)
 
@@ -627,32 +743,24 @@ class ShowInterstitialAds(
         if (::descriptionTextView.isInitialized)
             container.addView(descriptionTextView)
 
-        if (::installButton.isInitialized)
-            container.addView(installButton)
-
+        if (::installCardView.isInitialized) {
+            container.addView(installCardView)
+        }
         if (::urlWebView.isInitialized)
             container.addView(urlWebView)
 
-        if (::closeTextView.isInitialized)
-            container.addView(closeTextView)
-
-        if (::countdownTextView.isInitialized)
-            container.addView(countdownTextView)
+        if (::countdownCardView.isInitialized)
+            container.addView(countdownCardView)
 
         interstitial.timeToSkip?.let {
             timeToSkip(it)
         } ?: {
-            if (::countdownTextView.isInitialized)
-                countdownTextView.visibility = View.GONE
-
-            if (::closeTextView.isInitialized)
-                closeTextView.visibility = View.VISIBLE
+            countdownCardView.visibility = View.GONE
         }
         interstitial.timeOut?.let { timeToOut(it) }
 
-        (activity.findViewById<View>(android.R.id.content) as ViewGroup).addView(
-            container
-        )
+        allView = (activity.findViewById<View>(android.R.id.content) as ViewGroup)
+        allView.addView(container)
         ioScope.launch {
             interstitial.trackers?.impression?.let {
                 InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(it)
@@ -662,25 +770,42 @@ class ShowInterstitialAds(
                 PreferenceDataStoreConstants.HamrahAdsInterstitial
             )
         }
+
+        activity.onBackPressedDispatcher.addCallback(
+            activity,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (isBackPressed) {
+                        destroyAds()
+                        remove()
+                    }
+                }
+            })
+
         listener.onSuccess()
     }
 
     private fun timeToSkip(seconds: Int) {
         if (seconds == 0) return
+        isBackPressed = false
         countDownTimerSkip = object : CountDownTimer(seconds * 1000L, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val remainingTime = millisUntilFinished / 1000
-
                 if (::countdownTextView.isInitialized)
-                    countdownTextView.text = remainingTime.toString()
+                    countdownTextView.text =
+                        activity.applicationContext.getString(
+                            R.string.hamrah_ads_second,
+                            remainingTime.toString()
+                        )
             }
 
             override fun onFinish() {
+                isBackPressed = true
                 if (::countdownTextView.isInitialized)
-                    countdownTextView.visibility = View.GONE
-
-                if (::closeTextView.isInitialized)
-                    closeTextView.visibility = View.VISIBLE
+                    countdownTextView.text =
+                        activity.applicationContext.getString(
+                            R.string.hamrah_ads_end
+                        )
             }
         }
         countDownTimerSkip.start()
@@ -713,5 +838,8 @@ class ShowInterstitialAds(
 
         if (::container.isInitialized)
             container.removeAllViews()
+
+        if (::allView.isInitialized)
+            allView.removeView(container)
     }
 }

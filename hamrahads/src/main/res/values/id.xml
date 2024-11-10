@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="hamrah_ad_native_logo" type="id"/>
+    <item name="hamrah_ad_native_banner" type="id"/>
     <item name="hamrah_ad_native_title" type="id"/>
     <item name="hamrah_ad_native_description" type="id"/>
     <item name="hamrah_ad_native_cta" type="id"/>

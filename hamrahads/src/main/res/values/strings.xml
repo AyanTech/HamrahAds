@@ -1,3 +1,5 @@
 <resources>
-    <string name="hamrah_ads_font_close">&#xf135;</string>
+    <string name="hamrah_ads_font_close">&#xf134;</string>
+    <string name="hamrah_ads_second">%s ثانیه</string>
+    <string name="hamrah_ads_end">بستن</string>
 </resources>

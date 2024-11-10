@@ -3,6 +3,7 @@ package ir.ayantech.hamrahads
 import android.app.Activity
 import android.content.Context
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import ir.ayantech.hamrahads.core.Initializer
 import ir.ayantech.hamrahads.core.RequestBannerAds
 import ir.ayantech.hamrahads.core.ShowBannerAds
@@ -138,10 +139,10 @@ class HamrahAds {
     }
 
     class ShowInterstitialAds {
-        private lateinit var activity: Activity
+        private lateinit var activity: AppCompatActivity
         private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
 
-        fun setContext(activity: Activity) = apply {
+        fun setContext(activity: AppCompatActivity) = apply {
             this.activity = activity
         }
 
@@ -177,12 +178,16 @@ class HamrahAds {
             this.hamrahAdsInitListener = hamrahAdsInitListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.RequestBannerAds? {
+        fun build(): ir.ayantech.hamrahads.core.RequestNativeAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
                 ::hamrahAdsInitListener.isInitialized
             ) {
-                return RequestBannerAds(context, zoneId, hamrahAdsInitListener)
+                return ir.ayantech.hamrahads.core.RequestNativeAds(
+                    context,
+                    zoneId,
+                    hamrahAdsInitListener
+                )
             } else {
                 null
             }
