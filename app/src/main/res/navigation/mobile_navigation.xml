@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_banner">
+
+    <fragment
+        android:id="@+id/navigation_banner"
+        android:name="ir.ayantech.hamrahads.example.ui.banner.BannerFragment"
+        android:label=""
+        tools:layout="@layout/fragment_banner" />
+
+    <fragment
+        android:id="@+id/navigation_native"
+        android:name="ir.ayantech.hamrahads.example.ui.native.NativeFragment"
+        android:label=""
+        tools:layout="@layout/fragment_interstitial" />
+
+    <fragment
+        android:id="@+id/navigation_interstitial"
+        android:name="ir.ayantech.hamrahads.example.ui.interstitial.InterstitialFragment"
+        android:label=""
+        tools:layout="@layout/fragment_native" />
+</navigation>
