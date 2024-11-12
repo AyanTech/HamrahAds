@@ -1,6 +1,9 @@
 package ir.ayantech.hamrahads.core
 
 import BlurTransformation
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
 import android.content.res.Resources
 import android.graphics.Color
 import android.net.http.SslError
@@ -756,6 +759,7 @@ class ShowInterstitialAds(
 
             if (::installCardView.isInitialized) {
                 container.addView(installCardView)
+                startSwingAnimation(installCardView)
             }
             if (::urlWebView.isInitialized)
                 container.addView(urlWebView)
@@ -796,6 +800,27 @@ class ShowInterstitialAds(
             })
 
         listener.onSuccess()
+    }
+    private fun startSwingAnimation(view: View) {
+        val animator = ObjectAnimator.ofFloat(view, "rotation", -5f, 5f)
+        animator.duration = 300
+        animator.repeatCount = 5
+        animator.repeatMode = ObjectAnimator.REVERSE
+        animator.addListener(object : Animator.AnimatorListener{
+            override fun onAnimationStart(p0: Animator) {
+            }
+
+            override fun onAnimationEnd(p0: Animator) {
+                view.rotation = 0f
+            }
+
+            override fun onAnimationCancel(p0: Animator) {
+            }
+
+            override fun onAnimationRepeat(p0: Animator) {
+            }
+        })
+        animator.start()
     }
 
     private fun timeToSkip(seconds: Int) {
