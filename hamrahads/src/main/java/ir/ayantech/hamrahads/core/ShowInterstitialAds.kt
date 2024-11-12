@@ -105,6 +105,9 @@ class ShowInterstitialAds(
             )
             setBackgroundColor(Color.RED)
         }
+        container.setOnClickListener {
+            return@setOnClickListener
+        }
         urlWebView = WebView(activity.applicationContext).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -233,7 +236,9 @@ class ShowInterstitialAds(
             )
             setBackgroundColor(Color.WHITE)
         }
-
+        container.setOnClickListener {
+            return@setOnClickListener
+        }
         backgroundImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -478,7 +483,9 @@ class ShowInterstitialAds(
             )
             setBackgroundColor(Color.WHITE)
         }
-
+        container.setOnClickListener {
+            return@setOnClickListener
+        }
         backgroundImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,

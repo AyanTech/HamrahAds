@@ -2,15 +2,11 @@ package ir.ayantech.hamrahads.core
 
 import android.app.Activity
 import android.content.res.Resources
-import android.graphics.Color
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.constraintlayout.widget.ConstraintLayout
 import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.CachePolicy
@@ -75,7 +71,9 @@ class ShowBannerAds(
             }
         }
         container.layoutParams = params
-
+        container.setOnClickListener {
+            return@setOnClickListener
+        }
         val adImage = AppCompatImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 width,
@@ -91,7 +89,6 @@ class ShowBannerAds(
                 handleIntent(activity, banner.landingType, banner.landingLink)
             }
         }
-
 
         val bannerImage = when (size) {
             HamrahAdsBannerType.BANNER_320x50 -> banner.banner320x50

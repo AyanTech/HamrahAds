@@ -124,7 +124,6 @@ class ShowNativeAds(
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.banner1136x640)
-                                    .target(childView)
                                     .target(
                                         onStart = { placeholder ->
                                         },
