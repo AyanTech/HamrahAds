@@ -10,7 +10,7 @@ import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConsta
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 
@@ -19,11 +19,13 @@ class RequestBannerAds constructor(
     private val zoneId: String,
     private val listener: HamrahAdsInitListener
 ) {
-    private var fetchJob: Job? = null
+    private val job = SupervisorJob()
+    private val ioScope = CoroutineScope(Dispatchers.IO + job)
+    private val mainScope = CoroutineScope(Dispatchers.Main + job)
 
     init {
         NetworkDeviceInfo().fetchNetworkDeviceInfo(context) {
-            fetchJob = CoroutineScope(Dispatchers.IO).launch {
+            ioScope.launch {
                 when (val result =
                     BannerAdsRepository(NetworkModule(context)).fetchBannerAds(zoneId, it)) {
                     is NetworkResult.Success -> {
@@ -32,12 +34,16 @@ class RequestBannerAds constructor(
                             PreferenceDataStoreConstants.HamrahAdsBanner,
                             data
                         )
-                        listener.onSuccess()
+                        mainScope.launch {
+                            listener.onSuccess()
+                        }
                     }
 
                     is NetworkResult.Error -> {
                         val error = result.errorResponse
-                        listener.onError(error)
+                        mainScope.launch {
+                            listener.onError(error)
+                        }
                     }
                 }
             }
@@ -45,6 +51,6 @@ class RequestBannerAds constructor(
     }
 
     fun cancelRequest() {
-        fetchJob?.cancel()
+        job.cancel()
     }
 }

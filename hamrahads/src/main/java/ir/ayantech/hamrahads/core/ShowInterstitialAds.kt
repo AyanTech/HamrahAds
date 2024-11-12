@@ -105,53 +105,52 @@ class ShowInterstitialAds(
             )
             setBackgroundColor(Color.RED)
         }
-        mainScope.launch {
-            urlWebView = WebView(activity.applicationContext).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                ).apply {
-                    gravity = Gravity.CENTER
-                }
-                settings.javaScriptEnabled = true
-                webViewClient = object : WebViewClient() {
-                    override fun onPageFinished(view: WebView?, url: String?) {
-                        super.onPageFinished(view, url)
-                        loadContainer(interstitial)
-                    }
-
-                    override fun onReceivedSslError(
-                        view: WebView?,
-                        handler: SslErrorHandler?,
-                        error: SslError?
-                    ) {
-                        super.onReceivedSslError(view, handler, error)
-                        listener.onError(NetworkError().getError(7))
-                    }
-
-                    override fun onReceivedHttpError(
-                        view: WebView?,
-                        request: WebResourceRequest?,
-                        errorResponse: WebResourceResponse?
-                    ) {
-                        super.onReceivedHttpError(view, request, errorResponse)
-                        listener.onError(NetworkError().getError(7))
-                    }
-
-                    override fun onReceivedError(
-                        view: WebView?,
-                        request: WebResourceRequest?,
-                        error: WebResourceError?
-                    ) {
-                        super.onReceivedError(view, request, error)
-                        listener.onError(NetworkError().getError(7))
-                    }
-                }
+        urlWebView = WebView(activity.applicationContext).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                gravity = Gravity.CENTER
             }
-            interstitial.webTemplateUrl?.let {
-                urlWebView.loadUrl(it)
+            settings.javaScriptEnabled = true
+            webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    loadContainer(interstitial)
+                }
+
+                override fun onReceivedSslError(
+                    view: WebView?,
+                    handler: SslErrorHandler?,
+                    error: SslError?
+                ) {
+                    super.onReceivedSslError(view, handler, error)
+                    listener.onError(NetworkError().getError(7))
+                }
+
+                override fun onReceivedHttpError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    errorResponse: WebResourceResponse?
+                ) {
+                    super.onReceivedHttpError(view, request, errorResponse)
+                    listener.onError(NetworkError().getError(7))
+                }
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    listener.onError(NetworkError().getError(7))
+                }
             }
         }
+        interstitial.webTemplateUrl?.let {
+            urlWebView.loadUrl(it)
+        }
+
         countdownCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -197,16 +196,17 @@ class ShowInterstitialAds(
                     typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
                     setTextColor(Color.BLACK)
                     textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-                    setOnClickListener {
-                        if (isBackPressed) {
-                            destroyAds()
-                        }
-                    }
                 }
                 addView(countdownTextView)
                 addView(closeTextView)
             }
             addView(linear)
+            setOnClickListener {
+                if (isBackPressed) {
+                    listener.onClose()
+                    destroyAds()
+                }
+            }
         }
     }
 
@@ -392,16 +392,18 @@ class ShowInterstitialAds(
                     typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
                     setTextColor(Color.BLACK)
                     textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-                    setOnClickListener {
-                        if (isBackPressed) {
-                            destroyAds()
-                        }
-                    }
+
                 }
                 addView(countdownTextView)
                 addView(closeTextView)
             }
             addView(linear)
+            setOnClickListener {
+                if (isBackPressed) {
+                    listener.onClose()
+                    destroyAds()
+                }
+            }
         }
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
@@ -476,7 +478,6 @@ class ShowInterstitialAds(
             )
             setBackgroundColor(Color.WHITE)
         }
-
 
         backgroundImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -585,6 +586,7 @@ class ShowInterstitialAds(
             }
             addView(installButton)
         }
+
         countdownCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -630,16 +632,17 @@ class ShowInterstitialAds(
                     typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
                     setTextColor(Color.BLACK)
                     textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-                    setOnClickListener {
-                        if (isBackPressed) {
-                            destroyAds()
-                        }
-                    }
                 }
                 addView(countdownTextView)
                 addView(closeTextView)
             }
             addView(linear)
+            setOnClickListener {
+                if (isBackPressed) {
+                    listener.onClose()
+                    destroyAds()
+                }
+            }
         }
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
@@ -719,38 +722,43 @@ class ShowInterstitialAds(
             .build())
     }
 
-
     private fun loadContainer(interstitial: NetworkInterstitialAd) {
         if (imageLoaderCount != 0) {
             imageLoaderCount--
             return
         }
-        if (::backgroundImageView.isInitialized)
-            container.addView(backgroundImageView)
 
-        if (::indexImageView.isInitialized)
-            container.addView(indexImageView)
+        mainScope.launch {
+            if (::backgroundImageView.isInitialized)
+                container.addView(backgroundImageView)
 
-        if (::iconImageView.isInitialized)
-            container.addView(iconImageView)
+            if (::indexImageView.isInitialized)
+                container.addView(indexImageView)
 
-        if (::titleTextView.isInitialized)
-            container.addView(titleTextView)
+            if (::iconImageView.isInitialized)
+                container.addView(iconImageView)
 
-        if (::iconTitleTextView.isInitialized)
-            container.addView(iconTitleTextView)
+            if (::titleTextView.isInitialized)
+                container.addView(titleTextView)
 
-        if (::descriptionTextView.isInitialized)
-            container.addView(descriptionTextView)
+            if (::iconTitleTextView.isInitialized)
+                container.addView(iconTitleTextView)
 
-        if (::installCardView.isInitialized) {
-            container.addView(installCardView)
+            if (::descriptionTextView.isInitialized)
+                container.addView(descriptionTextView)
+
+            if (::installCardView.isInitialized) {
+                container.addView(installCardView)
+            }
+            if (::urlWebView.isInitialized)
+                container.addView(urlWebView)
+
+            if (::countdownCardView.isInitialized)
+                container.addView(countdownCardView)
+
+            allView = (activity.findViewById<View>(android.R.id.content) as ViewGroup)
+            allView.addView(container)
         }
-        if (::urlWebView.isInitialized)
-            container.addView(urlWebView)
-
-        if (::countdownCardView.isInitialized)
-            container.addView(countdownCardView)
 
         interstitial.timeToSkip?.let {
             timeToSkip(it)
@@ -759,8 +767,6 @@ class ShowInterstitialAds(
         }
         interstitial.timeOut?.let { timeToOut(it) }
 
-        allView = (activity.findViewById<View>(android.R.id.content) as ViewGroup)
-        allView.addView(container)
         ioScope.launch {
             interstitial.trackers?.impression?.let {
                 InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(it)
@@ -818,6 +824,7 @@ class ShowInterstitialAds(
             }
 
             override fun onFinish() {
+                listener.onClose()
                 destroyAds()
             }
         }
@@ -836,10 +843,11 @@ class ShowInterstitialAds(
         if (::countDownTimerSkip.isInitialized)
             countDownTimerSkip.cancel()
 
+        if (::allView.isInitialized && container.parent != null) {
+            allView.removeView(container)
+        }
         if (::container.isInitialized)
             container.removeAllViews()
 
-        if (::allView.isInitialized)
-            allView.removeView(container)
     }
 }

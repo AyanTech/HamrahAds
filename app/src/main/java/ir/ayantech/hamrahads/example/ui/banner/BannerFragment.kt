@@ -1,6 +1,7 @@
 package ir.ayantech.hamrahads.example.ui.banner
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,9 @@ import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
 import ir.ayantech.hamrahads.example.databinding.FragmentBannerBinding
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 class BannerFragment : Fragment() {
 
@@ -26,7 +30,7 @@ class BannerFragment : Fragment() {
         _binding = FragmentBannerBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        binding.buttonNative.setOnClickListener {
+        binding.buttonBanner.setOnClickListener {
             destroy()
             showBannerAds()
         }
@@ -47,6 +51,7 @@ class BannerFragment : Fragment() {
             .initId("e35f5d8d-a952-4bdf-b63e-7aa8d6de9753")
             .initListener(object : HamrahAdsInitListener {
                 override fun onSuccess() {
+                    Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestBannerAds"
 
                     showBannerAds = HamrahAds.ShowBannerAds()
@@ -72,6 +77,7 @@ class BannerFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        destroy()
         _binding = null
     }
 }

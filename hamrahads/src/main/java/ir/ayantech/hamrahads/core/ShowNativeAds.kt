@@ -34,7 +34,6 @@ class ShowNativeAds(
 ) {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
-    private val mainScope = CoroutineScope(Dispatchers.Main + job)
 
     init {
         val native = PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNative(
@@ -47,9 +46,7 @@ class ShowNativeAds(
             && !native.trackers?.click.isNullOrEmpty()
             && !native.trackers?.impression.isNullOrEmpty()
         ) {
-            mainScope.launch {
-                showView(viewGroup, native)
-            }
+            showView(viewGroup, native)
         } else {
             listener.onError(NetworkError().getError(6))
         }

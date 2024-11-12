@@ -37,7 +37,6 @@ class InterstitialFragment : Fragment() {
     private fun destroy() {
         showInterstitialAds?.destroyAds()
         requestInterstitial?.cancelRequest()
-
     }
 
     private var showInterstitialAds: ShowInterstitialAds? = null
@@ -61,6 +60,11 @@ class InterstitialFragment : Fragment() {
                                 binding.textStatus.text =
                                     "onError ShowInterstitialAds " + error.code
                             }
+
+                            override fun onClose() {
+                                binding.textStatus.text =
+                                    "onClose ShowInterstitialAds "
+                            }
                         }).build()
                 }
 
@@ -72,6 +76,7 @@ class InterstitialFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        destroy()
         _binding = null
     }
 }

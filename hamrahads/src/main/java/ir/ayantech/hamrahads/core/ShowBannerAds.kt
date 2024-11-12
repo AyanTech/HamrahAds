@@ -7,7 +7,10 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.CachePolicy
@@ -29,7 +32,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 
-class ShowBannerAds (
+class ShowBannerAds(
     private val activity: Activity,
     private val size: HamrahAdsBannerType,
     private var viewGroup: ViewGroup? = null,
@@ -70,14 +73,13 @@ class ShowBannerAds (
             if (viewGroup == null) {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             }
-
         }
         container.layoutParams = params
 
         val adImage = AppCompatImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
+                width,
+                height
             )
             scaleType = ImageView.ScaleType.FIT_XY
             setOnClickListener {
@@ -89,6 +91,7 @@ class ShowBannerAds (
                 handleIntent(activity, banner.landingType, banner.landingLink)
             }
         }
+
 
         val bannerImage = when (size) {
             HamrahAdsBannerType.BANNER_320x50 -> banner.banner320x50
@@ -105,17 +108,15 @@ class ShowBannerAds (
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-                        .target(adImage)
-                        .data(result.asDrawable(Resources.getSystem()))
-                        .build())
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(adImage)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
 
                     if (viewGroup != null) {
-                        val paramViewGroup = viewGroup?.layoutParams
-                        paramViewGroup?.width = width
-                        paramViewGroup?.height = height
-                        viewGroup?.layoutParams = paramViewGroup
-                        viewGroup?.addView(container, paramViewGroup)
+                        viewGroup?.addView(container)
                     } else {
                         activity.addContentView(container, params)
                     }

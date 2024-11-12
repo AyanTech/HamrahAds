@@ -53,6 +53,7 @@ class NativeFragment : Fragment() {
                         .setViewGroup(binding.nativeView)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {
+                                binding.nativeView.visibility = View.VISIBLE
                                 binding.textStatus.text = "onSuccess ShowNativeAds"
                             }
 
@@ -67,8 +68,10 @@ class NativeFragment : Fragment() {
                 }
             }).build()
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        destroy()
         _binding = null
     }
 }
