@@ -2,7 +2,6 @@ package ir.ayantech.hamrahads.core
 
 import BlurTransformation
 import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.content.res.Resources
 import android.graphics.Color
@@ -59,12 +58,14 @@ class ShowInterstitialAds(
     private lateinit var indexImageView: ImageView
     private lateinit var iconImageView: ImageView
     private lateinit var iconTitleTextView: TextView
+    private lateinit var webUrlTextView: TextView
     private lateinit var titleTextView: TextView
     private lateinit var descriptionTextView: TextView
     private lateinit var installCardView: CardView
     private lateinit var urlWebView: WebView
     private lateinit var countDownTimerSkip: CountDownTimer
     private lateinit var countDownTimerOut: CountDownTimer
+    private lateinit var resources: Resources
 
     private lateinit var allView: ViewGroup
     private var isBackPressed = true
@@ -82,6 +83,7 @@ class ShowInterstitialAds(
                 null
             )
         if (interstitial?.interstitialTemplate != null) {
+            resources = activity.applicationContext.resources
             when (interstitial.interstitialTemplate) {
                 1 -> initView1(interstitial)
                 2 -> initView2(interstitial)
@@ -92,7 +94,7 @@ class ShowInterstitialAds(
         }
     }
 
-    private fun initView3(interstitial: NetworkInterstitialAd) {
+    private fun initView4(interstitial: NetworkInterstitialAd) {
         if (interstitial.webTemplateUrl.isNullOrEmpty()) {
             destroyAds()
             listener.onError(NetworkError().getError(6))
@@ -216,6 +218,177 @@ class ShowInterstitialAds(
         }
     }
 
+    private fun initView3(interstitial: NetworkInterstitialAd) {
+        if (interstitial.interstitialBanner.isNullOrEmpty()
+            || interstitial.landingType == null
+            || interstitial.landingLink.isNullOrEmpty()
+            || interstitial.logo.isNullOrEmpty()
+            || interstitial.trackers?.click.isNullOrEmpty()
+            || interstitial.trackers?.impression.isNullOrEmpty()
+        ) {
+            destroyAds()
+            listener.onError(NetworkError().getError(6))
+            return
+        }
+
+        imageLoaderCount = 1
+
+        val screenSize = UnitUtils.getScreenSize(activity)
+        container = FrameLayout(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.WHITE)
+        }
+
+        container.setOnClickListener {
+            return@setOnClickListener
+        }
+
+        backgroundImageView = ImageView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                gravity = Gravity.TOP
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._150sdp)
+            }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+
+        iconImageView = ImageView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._80sdp),
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._80sdp)
+            ).apply {
+                gravity = Gravity.RIGHT
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._55sdp)
+            }
+            scaleType = ImageView.ScaleType.FIT_XY
+        }
+
+        iconTitleTextView = TextView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setTextColor(Color.BLACK)
+                gravity = Gravity.RIGHT
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._110sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._85sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                text = interstitial.interstitialLabel
+            }
+            gravity = Gravity.CENTER
+        }
+
+        webUrlTextView = TextView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setTextColor(Color.GRAY)
+                gravity = Gravity.RIGHT
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._110sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._110sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                text = interstitial.webTemplateUrl
+            }
+            gravity = Gravity.CENTER
+        }
+
+        titleTextView = TextView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.BOTTOM
+                bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._175sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+                setTextColor(Color.BLACK)
+                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
+                text = interstitial.caption
+            }
+            gravity = Gravity.CENTER
+        }
+
+        descriptionTextView = TextView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.BOTTOM
+                bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._155sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                setTextColor(Color.BLACK)
+                typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                text = interstitial.description
+            }
+            gravity = Gravity.CENTER
+        }
+
+        button(interstitial)
+
+        val imageLoader = ImageLoader.Builder(activity.applicationContext)
+            .build()
+
+        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
+            .data(interstitial.interstitialBanner)
+            .target(
+                onStart = { placeholder ->
+                },
+                onSuccess = { result ->
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(backgroundImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
+                    loadContainer(interstitial)
+                },
+                onError = { error ->
+                    destroyAds()
+                    listener.onError(NetworkError().getError(5))
+                }
+            )
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .build())
+
+        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
+            .data(interstitial.logo)
+            .target(
+                onStart = { placeholder ->
+                },
+                onSuccess = { result ->
+                    imageLoader.enqueue(
+                        ImageRequest.Builder(activity.applicationContext)
+                            .target(iconImageView)
+                            .data(result.asDrawable(Resources.getSystem()))
+                            .build()
+                    )
+                    loadContainer(interstitial)
+                },
+                onError = { error ->
+                    destroyAds()
+                    listener.onError(NetworkError().getError(5))
+                }
+            )
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .build())
+    }
+
     private fun initView2(interstitial: NetworkInterstitialAd) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
@@ -245,7 +418,7 @@ class ShowInterstitialAds(
         backgroundImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                (screenSize[0] * 0.3).toInt()
+                FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP
             }
@@ -258,10 +431,10 @@ class ShowInterstitialAds(
                 FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP
-                topMargin = (screenSize[0] * 0.32).toInt()
-                rightMargin = 32
-                leftMargin = 32
-                textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._195sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                textSize =resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
                 setTextColor(Color.BLACK)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
                 text = interstitial.caption
@@ -275,10 +448,10 @@ class ShowInterstitialAds(
                 FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP
-                topMargin = (screenSize[0] * 0.36).toInt()
-                textSize = UnitUtils.pxToDp(40f, activity.applicationContext)
-                rightMargin = 32
-                leftMargin = 32
+                topMargin =  resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._225sdp)
+                textSize =resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
                 setTextColor(Color.BLACK)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
                 text = interstitial.description
@@ -288,11 +461,11 @@ class ShowInterstitialAds(
 
         iconImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.2)).toInt(),
-                (screenSize[1] * 0.2).toInt()
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._70sdp),
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._70sdp)
             ).apply {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                bottomMargin = (screenSize[0] * 0.3).toInt()
+                bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._190sdp)
             }
             scaleType = ImageView.ScaleType.FIT_XY
         }
@@ -304,115 +477,16 @@ class ShowInterstitialAds(
             ).apply {
                 gravity = Gravity.BOTTOM
                 setTextColor(Color.BLACK)
-                rightMargin = 32
-                leftMargin = 32
-                bottomMargin = (screenSize[0] * 0.25).toInt()
-                textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._150sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
                 text = interstitial.interstitialLabel
             }
             gravity = Gravity.CENTER
         }
-
-        installCardView = CardView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.6)).toInt(),
-                (screenSize[1] * 0.15).toInt()
-            ).apply {
-                bottomMargin = (screenSize[0] * 0.14).toInt()
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            }
-            setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_2))
-            cardElevation = 12f
-            radius = 100f
-
-            val installButton = TextView(activity).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                ).apply {
-                    setTextColor(Color.WHITE)
-                    textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
-                    text = interstitial.cta
-                    setOnClickListener {
-                        ioScope.launch {
-                            interstitial.trackers?.click?.let {
-                                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
-                                    it
-                                )
-                            }
-                        }
-                        handleIntent(
-                            activity,
-                            interstitial.landingType,
-                            interstitial.landingLink
-                        )
-                    }
-                }
-                gravity = Gravity.CENTER
-            }
-            addView(installButton)
-        }
-
-        countdownCardView = CardView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                topMargin = 24
-                rightMargin = 24
-                gravity = Gravity.TOP or Gravity.END
-            }
-            setCardBackgroundColor(Color.WHITE)
-            cardElevation = 6f
-            radius = 50f
-
-            val linear = LinearLayout(activity).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                ).apply {
-                }
-                gravity = Gravity.CENTER
-
-                countdownTextView = TextView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        ((screenSize[1] * 0.15)).toInt(),
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        maxLines = 1
-                    }
-                    gravity = Gravity.CENTER
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
-                    setTextColor(Color.BLACK)
-                }
-
-                val closeTextView = TextView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        marginEnd = 20
-                    }
-                    text = resources.getText(R.string.hamrah_ads_font_close)
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-                    setTextColor(Color.BLACK)
-                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-
-                }
-                addView(countdownTextView)
-                addView(closeTextView)
-            }
-            addView(linear)
-            setOnClickListener {
-                if (isBackPressed) {
-                    listener.onClose()
-                    destroyAds()
-                }
-            }
-        }
+        button(interstitial)
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
             .build()
@@ -492,7 +566,7 @@ class ShowInterstitialAds(
         backgroundImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                (screenSize[0] * 0.4).toInt()
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._250sdp)
             ).apply {
                 gravity = Gravity.TOP
             }
@@ -501,23 +575,25 @@ class ShowInterstitialAds(
 
         indexImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
-                (screenSize[1] - (screenSize[1] * 0.1)).toInt(),
-                (screenSize[0] * 0.2).toInt()
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                topMargin = (screenSize[0] * 0.1).toInt()
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._25sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._25sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._50sdp)
             }
             scaleType = ImageView.ScaleType.FIT_XY
         }
 
         iconImageView = ImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.2)).toInt(),
-                (screenSize[1] * 0.2).toInt()
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._70sdp),
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._70sdp)
             ).apply {
                 gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-                topMargin = (screenSize[0] * 0.35).toInt()
+                topMargin =   resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._215sdp)
             }
             scaleType = ImageView.ScaleType.FIT_XY
         }
@@ -529,10 +605,10 @@ class ShowInterstitialAds(
             ).apply {
                 gravity = Gravity.TOP
                 setTextColor(Color.BLACK)
-                rightMargin = 32
-                leftMargin = 32
-                topMargin = (screenSize[0] * 0.46).toInt()
-                textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._290sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
                 text = interstitial.interstitialLabel
             }
@@ -545,10 +621,10 @@ class ShowInterstitialAds(
                 FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP
-                topMargin = (screenSize[0] * 0.52).toInt()
-                textSize = UnitUtils.pxToDp(40f, activity.applicationContext)
-                rightMargin = 32
-                leftMargin = 32
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._320sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
                 setTextColor(Color.BLACK)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
                 text = interstitial.description
@@ -556,104 +632,7 @@ class ShowInterstitialAds(
             gravity = Gravity.CENTER
         }
 
-        installCardView = CardView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ((screenSize[1] * 0.6)).toInt(),
-                (screenSize[1] * 0.15).toInt()
-            ).apply {
-                bottomMargin = (screenSize[0] * 0.1).toInt()
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            }
-            setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_2))
-            cardElevation = 12f
-            radius = 100f
-
-            val installButton = TextView(activity).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                ).apply {
-                    setTextColor(Color.WHITE)
-                    textSize = UnitUtils.pxToDp(50f, activity.applicationContext)
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
-                    text = interstitial.cta
-                    setOnClickListener {
-                        ioScope.launch {
-                            interstitial.trackers?.click?.let {
-                                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
-                                    it
-                                )
-                            }
-                        }
-                        handleIntent(
-                            activity,
-                            interstitial.landingType,
-                            interstitial.landingLink
-                        )
-                    }
-                }
-                gravity = Gravity.CENTER
-            }
-            addView(installButton)
-        }
-
-        countdownCardView = CardView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                topMargin = 24
-                rightMargin = 24
-                gravity = Gravity.TOP or Gravity.END
-            }
-            setCardBackgroundColor(Color.WHITE)
-            cardElevation = 6f
-            radius = 50f
-
-            val linear = LinearLayout(activity).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                ).apply {
-                }
-                gravity = Gravity.CENTER
-
-                countdownTextView = TextView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        ((screenSize[1] * 0.15)).toInt(),
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        maxLines = 1
-                    }
-                    gravity = Gravity.CENTER
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
-                    setTextColor(Color.BLACK)
-                }
-
-                val closeTextView = TextView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        marginEnd = 20
-                    }
-                    text = resources.getText(R.string.hamrah_ads_font_close)
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-                    setTextColor(Color.BLACK)
-                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-                }
-                addView(countdownTextView)
-                addView(closeTextView)
-            }
-            addView(linear)
-            setOnClickListener {
-                if (isBackPressed) {
-                    listener.onClose()
-                    destroyAds()
-                }
-            }
-        }
+        button(interstitial)
 
         val imageLoader = ImageLoader.Builder(activity.applicationContext)
             .build()
@@ -732,6 +711,108 @@ class ShowInterstitialAds(
             .build())
     }
 
+    private fun button(interstitial: NetworkInterstitialAd){
+        installCardView = CardView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._170sdp),
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._40sdp)
+            ).apply {
+                bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._80sdp)
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            }
+            setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_2))
+            cardElevation = resources.getDimension(com.intuit.sdp.R.dimen._2sdp)
+            radius = resources.getDimension(com.intuit.sdp.R.dimen._20sdp)
+
+            val installButton = TextView(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                ).apply {
+                    setTextColor(Color.WHITE)
+                    textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
+                    text = interstitial.cta
+                    setOnClickListener {
+                        ioScope.launch {
+                            interstitial.trackers?.click?.let {
+                                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
+                                    it
+                                )
+                            }
+                        }
+                        handleIntent(
+                            activity,
+                            interstitial.landingType,
+                            interstitial.landingLink
+                        )
+                    }
+                }
+                gravity = Gravity.CENTER
+            }
+            addView(installButton)
+        }
+
+        countdownCardView = CardView(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._22sdp)
+            ).apply {
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+                rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+                gravity = Gravity.TOP or Gravity.END
+            }
+            setCardBackgroundColor(Color.WHITE)
+            cardElevation = resources.getDimension(com.intuit.sdp.R.dimen._2sdp)
+            radius = resources.getDimension(com.intuit.sdp.R.dimen._10sdp)
+
+            val linear = LinearLayout(activity).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                }
+                gravity = Gravity.CENTER
+
+                countdownTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._40sdp),
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        maxLines = 1
+                    }
+                    gravity = Gravity.CENTER
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+                    textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+                    setTextColor(Color.BLACK)
+                }
+
+                val closeTextView = TextView(activity).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        marginEnd = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._7sdp)
+                    }
+                    text = resources.getText(R.string.hamrah_ads_font_close)
+                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
+                    setTextColor(Color.BLACK)
+                    textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+
+                }
+                addView(countdownTextView)
+                addView(closeTextView)
+            }
+            addView(linear)
+            setOnClickListener {
+                if (isBackPressed) {
+                    listener.onClose()
+                    destroyAds()
+                }
+            }
+        }
+    }
+
     private fun loadContainer(interstitial: NetworkInterstitialAd) {
         if (imageLoaderCount != 0) {
             imageLoaderCount--
@@ -754,6 +835,9 @@ class ShowInterstitialAds(
             if (::iconTitleTextView.isInitialized)
                 container.addView(iconTitleTextView)
 
+            if (::webUrlTextView.isInitialized)
+                container.addView(webUrlTextView)
+
             if (::descriptionTextView.isInitialized)
                 container.addView(descriptionTextView)
 
@@ -761,8 +845,9 @@ class ShowInterstitialAds(
                 container.addView(installCardView)
                 startSwingAnimation(installCardView)
             }
-            if (::urlWebView.isInitialized)
-                container.addView(urlWebView)
+
+//            if (::urlWebView.isInitialized)
+//                container.addView(urlWebView)
 
             if (::countdownCardView.isInitialized)
                 container.addView(countdownCardView)
@@ -801,12 +886,13 @@ class ShowInterstitialAds(
 
         listener.onSuccess()
     }
+
     private fun startSwingAnimation(view: View) {
         val animator = ObjectAnimator.ofFloat(view, "rotation", -5f, 5f)
         animator.duration = 300
         animator.repeatCount = 5
         animator.repeatMode = ObjectAnimator.REVERSE
-        animator.addListener(object : Animator.AnimatorListener{
+        animator.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(p0: Animator) {
             }
 

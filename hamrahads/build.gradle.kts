@@ -55,4 +55,5 @@ dependencies {
     implementation(libs.play.services.ads.identifier)
     implementation(libs.coil.network.okhttp)
     implementation(libs.coil.gif)
+    implementation("com.intuit.sdp:sdp-android:1.1.1")
 }

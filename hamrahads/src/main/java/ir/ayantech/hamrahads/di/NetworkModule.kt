@@ -10,6 +10,8 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.net.Proxy
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 class NetworkModule(private val context: Context) {
 
@@ -30,6 +32,10 @@ class NetworkModule(private val context: Context) {
             .addInterceptor(NetworkHeader(context))
             .addInterceptor(loggingInterceptor())
             .proxy(Proxy.NO_PROXY)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .callTimeout(5, TimeUnit.SECONDS)
+            .writeTimeout(5, TimeUnit.SECONDS)
+            .connectTimeout(5, TimeUnit.SECONDS)
             .build()
     }
 
