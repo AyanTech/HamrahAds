@@ -1,10 +1,10 @@
-package ir.ayantech.hamrahads.utils.deviceUtils;
+package ir.ayantech.hamrahads.utils.deviceUtils
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
+import java.io.BufferedReader
+import java.io.DataOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
 
 /**
  * <pre>
@@ -14,23 +14,19 @@ import java.util.List;
  *     desc  : utils about shell
  * </pre>
  */
-public final class ShellUtils {
+object ShellUtils {
 
-    private static final String LINE_SEP = System.getProperty("line.separator");
-
-    private ShellUtils() {
-        throw new UnsupportedOperationException("u can't instantiate me...");
-    }
+    private val LINE_SEP = System.getProperty("line.separator")
 
     /**
      * Execute the command.
      *
      * @param command  The command.
      * @param isRooted True to use root, false otherwise.
-     * @return the single {@link CommandResult} instance
+     * @return the single [CommandResult] instance
      */
-    public static CommandResult execCmd(final String command, final boolean isRooted) {
-        return execCmd(new String[]{command}, isRooted, true);
+    fun execCmd(command: String, isRooted: Boolean): CommandResult {
+        return execCmd(arrayOf(command), isRooted, true)
     }
 
     /**
@@ -38,10 +34,10 @@ public final class ShellUtils {
      *
      * @param commands The commands.
      * @param isRooted True to use root, false otherwise.
-     * @return the single {@link CommandResult} instance
+     * @return the single [CommandResult] instance
      */
-    public static CommandResult execCmd(final List<String> commands, final boolean isRooted) {
-        return execCmd(commands == null ? null : commands.toArray(new String[]{}), isRooted, true);
+    fun execCmd(commands: List<String>?, isRooted: Boolean): CommandResult {
+        return execCmd(commands?.toTypedArray(), isRooted, true)
     }
 
     /**
@@ -49,10 +45,10 @@ public final class ShellUtils {
      *
      * @param commands The commands.
      * @param isRooted True to use root, false otherwise.
-     * @return the single {@link CommandResult} instance
+     * @return the single [CommandResult] instance
      */
-    public static CommandResult execCmd(final String[] commands, final boolean isRooted) {
-        return execCmd(commands, isRooted, true);
+    fun execCmd(commands: Array<String>?, isRooted: Boolean): CommandResult {
+        return execCmd(commands, isRooted, true)
     }
 
     /**
@@ -61,12 +57,14 @@ public final class ShellUtils {
      * @param command         The command.
      * @param isRooted        True to use root, false otherwise.
      * @param isNeedResultMsg True to return the message of result, false otherwise.
-     * @return the single {@link CommandResult} instance
+     * @return the single [CommandResult] instance
      */
-    public static CommandResult execCmd(final String command,
-                                        final boolean isRooted,
-                                        final boolean isNeedResultMsg) {
-        return execCmd(new String[]{command}, isRooted, isNeedResultMsg);
+    fun execCmd(
+        command: String,
+        isRooted: Boolean,
+        isNeedResultMsg: Boolean
+    ): CommandResult {
+        return execCmd(arrayOf(command), isRooted, isNeedResultMsg)
     }
 
     /**
@@ -75,14 +73,14 @@ public final class ShellUtils {
      * @param commands        The commands.
      * @param isRooted        True to use root, false otherwise.
      * @param isNeedResultMsg True to return the message of result, false otherwise.
-     * @return the single {@link CommandResult} instance
+     * @return the single [CommandResult] instance
      */
-    public static CommandResult execCmd(final List<String> commands,
-                                        final boolean isRooted,
-                                        final boolean isNeedResultMsg) {
-        return execCmd(commands == null ? null : commands.toArray(new String[]{}),
-                isRooted,
-                isNeedResultMsg);
+    fun execCmd(
+        commands: List<String>?,
+        isRooted: Boolean,
+        isNeedResultMsg: Boolean
+    ): CommandResult {
+        return execCmd(commands?.toTypedArray(), isRooted, isNeedResultMsg)
     }
 
     /**
@@ -91,101 +89,88 @@ public final class ShellUtils {
      * @param commands        The commands.
      * @param isRooted        True to use root, false otherwise.
      * @param isNeedResultMsg True to return the message of result, false otherwise.
-     * @return the single {@link CommandResult} instance
+     * @return the single [CommandResult] instance
      */
-    public static CommandResult execCmd(final String[] commands,
-                                        final boolean isRooted,
-                                        final boolean isNeedResultMsg) {
-        int result = -1;
-        if (commands == null || commands.length == 0) {
-            return new CommandResult(result, null, null);
+    fun execCmd(
+        commands: Array<String>?,
+        isRooted: Boolean,
+        isNeedResultMsg: Boolean
+    ): CommandResult {
+        var result = -1
+        if (commands == null || commands.isEmpty()) {
+            return CommandResult(result, null, null)
         }
-        Process process = null;
-        BufferedReader successResult = null;
-        BufferedReader errorResult = null;
-        StringBuilder successMsg = null;
-        StringBuilder errorMsg = null;
-        DataOutputStream os = null;
+        var process: Process? = null
+        var successResult: BufferedReader? = null
+        var errorResult: BufferedReader? = null
+        var successMsg: StringBuilder? = null
+        var errorMsg: StringBuilder? = null
+        var os: DataOutputStream? = null
         try {
-            process = Runtime.getRuntime().exec(isRooted ? "su" : "sh");
-            os = new DataOutputStream(process.getOutputStream());
-            for (String command : commands) {
-                if (command == null) continue;
-                os.write(command.getBytes());
-                os.writeBytes(LINE_SEP);
-                os.flush();
+            process = Runtime.getRuntime().exec(if (isRooted) "su" else "sh")
+            os = DataOutputStream(process.outputStream)
+            for (command in commands) {
+                if (command == null) continue
+                os.write(command.toByteArray())
+                os.writeBytes(LINE_SEP)
+                os.flush()
             }
-            os.writeBytes("exit" + LINE_SEP);
-            os.flush();
-            result = process.waitFor();
+            os.writeBytes("exit$LINE_SEP")
+            os.flush()
+            result = process.waitFor()
             if (isNeedResultMsg) {
-                successMsg = new StringBuilder();
-                errorMsg = new StringBuilder();
-                successResult = new BufferedReader(new InputStreamReader(process.getInputStream(),
-                        "UTF-8"));
-                errorResult = new BufferedReader(new InputStreamReader(process.getErrorStream(),
-                        "UTF-8"));
-                String line;
-                if ((line = successResult.readLine()) != null) {
-                    successMsg.append(line);
-                    while ((line = successResult.readLine()) != null) {
-                        successMsg.append(LINE_SEP).append(line);
+                successMsg = StringBuilder()
+                errorMsg = StringBuilder()
+                successResult = BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8))
+                errorResult = BufferedReader(InputStreamReader(process.errorStream, StandardCharsets.UTF_8))
+                var line: String?
+                if (successResult.readLine().also { line = it } != null) {
+                    successMsg.append(line)
+                    while (successResult.readLine().also { line = it } != null) {
+                        successMsg.append(LINE_SEP).append(line)
                     }
                 }
-                if ((line = errorResult.readLine()) != null) {
-                    errorMsg.append(line);
-                    while ((line = errorResult.readLine()) != null) {
-                        errorMsg.append(LINE_SEP).append(line);
+                if (errorResult.readLine().also { line = it } != null) {
+                    errorMsg.append(line)
+                    while (errorResult.readLine().also { line = it } != null) {
+                        errorMsg.append(LINE_SEP).append(line)
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (e: Exception) {
+            e.printStackTrace()
         } finally {
             try {
-                if (os != null) {
-                    os.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+                os?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
             try {
-                if (successResult != null) {
-                    successResult.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+                successResult?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
             try {
-                if (errorResult != null) {
-                    errorResult.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+                errorResult?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
-            if (process != null) {
-                process.destroy();
-            }
+            process?.destroy()
         }
-        return new CommandResult(
-                result,
-                successMsg == null ? null : successMsg.toString(),
-                errorMsg == null ? null : errorMsg.toString()
-        );
+        return CommandResult(
+            result,
+            successMsg?.toString(),
+            errorMsg?.toString()
+        )
     }
 
     /**
      * The result of command.
      */
-    public static class CommandResult {
-        public int    result;
-        public String successMsg;
-        public String errorMsg;
-
-        public CommandResult(final int result, final String successMsg, final String errorMsg) {
-            this.result = result;
-            this.successMsg = successMsg;
-            this.errorMsg = errorMsg;
-        }
-    }
+    data class CommandResult(
+        var result: Int,
+        var successMsg: String?,
+        var errorMsg: String?
+    )
 }
+

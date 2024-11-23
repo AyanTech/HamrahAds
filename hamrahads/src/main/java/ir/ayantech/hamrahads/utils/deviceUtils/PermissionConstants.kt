@@ -1,93 +1,83 @@
-package ir.ayantech.hamrahads.utils.deviceUtils;
+package ir.ayantech.hamrahads.utils.deviceUtils
 
-import android.Manifest;
-import android.Manifest.permission;
-import android.annotation.SuppressLint;
+import android.Manifest
+import android.annotation.SuppressLint
 
-import androidx.annotation.StringDef;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-
-/**
- * <pre>
- *     author: Blankj
- *     blog  : http://blankj.com
- *     time  : 2017/12/29
- *     desc  : The constants of permission.
- * </pre>
- */
 @SuppressLint("InlinedApi")
-public final class PermissionConstants {
+object PermissionConstants {
 
-    public static final String CALENDAR   = Manifest.permission_group.CALENDAR;
-    public static final String CAMERA     = Manifest.permission_group.CAMERA;
-    public static final String CONTACTS   = Manifest.permission_group.CONTACTS;
-    public static final String LOCATION   = Manifest.permission_group.LOCATION;
-    public static final String MICROPHONE = Manifest.permission_group.MICROPHONE;
-    public static final String PHONE      = Manifest.permission_group.PHONE;
-    public static final String SENSORS    = Manifest.permission_group.SENSORS;
-    public static final String SMS        = Manifest.permission_group.SMS;
-    public static final String STORAGE    = Manifest.permission_group.STORAGE;
+    const val CALENDAR = Manifest.permission_group.CALENDAR
+    const val CAMERA = Manifest.permission_group.CAMERA
+    const val CONTACTS = Manifest.permission_group.CONTACTS
+    const val LOCATION = Manifest.permission_group.LOCATION
+    const val MICROPHONE = Manifest.permission_group.MICROPHONE
+    const val PHONE = Manifest.permission_group.PHONE
+    const val SENSORS = Manifest.permission_group.SENSORS
+    const val SMS = Manifest.permission_group.SMS
+    const val STORAGE = Manifest.permission_group.STORAGE
 
-    private static final String[] GROUP_CALENDAR   = {
-            permission.READ_CALENDAR, permission.WRITE_CALENDAR
-    };
-    private static final String[] GROUP_CAMERA     = {
-            permission.CAMERA
-    };
-    private static final String[] GROUP_CONTACTS   = {
-            permission.READ_CONTACTS, permission.WRITE_CONTACTS, permission.GET_ACCOUNTS
-    };
-    private static final String[] GROUP_LOCATION   = {
-            permission.ACCESS_FINE_LOCATION, permission.ACCESS_COARSE_LOCATION
-    };
-    private static final String[] GROUP_MICROPHONE = {
-            permission.RECORD_AUDIO
-    };
-    private static final String[] GROUP_PHONE      = {
-            permission.READ_PHONE_STATE, permission.READ_PHONE_NUMBERS, permission.CALL_PHONE,
-            permission.ANSWER_PHONE_CALLS, permission.READ_CALL_LOG, permission.WRITE_CALL_LOG,
-            permission.ADD_VOICEMAIL, permission.USE_SIP, permission.PROCESS_OUTGOING_CALLS
-    };
-    private static final String[] GROUP_SENSORS    = {
-            permission.BODY_SENSORS
-    };
-    private static final String[] GROUP_SMS        = {
-            permission.SEND_SMS, permission.RECEIVE_SMS, permission.READ_SMS,
-            permission.RECEIVE_WAP_PUSH, permission.RECEIVE_MMS,
-    };
-    private static final String[] GROUP_STORAGE    = {
-            permission.READ_EXTERNAL_STORAGE, permission.WRITE_EXTERNAL_STORAGE
-    };
+    private val GROUP_CALENDAR = arrayOf(
+        Manifest.permission.READ_CALENDAR,
+        Manifest.permission.WRITE_CALENDAR
+    )
+    private val GROUP_CAMERA = arrayOf(
+        Manifest.permission.CAMERA
+    )
+    private val GROUP_CONTACTS = arrayOf(
+        Manifest.permission.READ_CONTACTS,
+        Manifest.permission.WRITE_CONTACTS,
+        Manifest.permission.GET_ACCOUNTS
+    )
+    private val GROUP_LOCATION = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+    private val GROUP_MICROPHONE = arrayOf(
+        Manifest.permission.RECORD_AUDIO
+    )
+    private val GROUP_PHONE = arrayOf(
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.READ_PHONE_NUMBERS,
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.ANSWER_PHONE_CALLS,
+        Manifest.permission.READ_CALL_LOG,
+        Manifest.permission.WRITE_CALL_LOG,
+        Manifest.permission.ADD_VOICEMAIL,
+        Manifest.permission.USE_SIP,
+        Manifest.permission.PROCESS_OUTGOING_CALLS
+    )
+    private val GROUP_SENSORS = arrayOf(
+        Manifest.permission.BODY_SENSORS
+    )
+    private val GROUP_SMS = arrayOf(
+        Manifest.permission.SEND_SMS,
+        Manifest.permission.RECEIVE_SMS,
+        Manifest.permission.READ_SMS,
+        Manifest.permission.RECEIVE_WAP_PUSH,
+        Manifest.permission.RECEIVE_MMS
+    )
+    private val GROUP_STORAGE = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
 
-    @StringDef({CALENDAR, CAMERA, CONTACTS, LOCATION, MICROPHONE, PHONE, SENSORS, SMS, STORAGE,})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Permission {
-    }
+    @Retention(AnnotationRetention.SOURCE)
+    @Target(AnnotationTarget.VALUE_PARAMETER)
+    annotation class Permission
 
-    public static String[] getPermissions(@Permission final String permission) {
-        switch (permission) {
-            case CALENDAR:
-                return GROUP_CALENDAR;
-            case CAMERA:
-                return GROUP_CAMERA;
-            case CONTACTS:
-                return GROUP_CONTACTS;
-            case LOCATION:
-                return GROUP_LOCATION;
-            case MICROPHONE:
-                return GROUP_MICROPHONE;
-            case PHONE:
-                return GROUP_PHONE;
-            case SENSORS:
-                return GROUP_SENSORS;
-            case SMS:
-                return GROUP_SMS;
-            case STORAGE:
-                return GROUP_STORAGE;
+    fun getPermissions(@Permission permission: String): Array<String> {
+        return when (permission) {
+            CALENDAR -> GROUP_CALENDAR
+            CAMERA -> GROUP_CAMERA
+            CONTACTS -> GROUP_CONTACTS
+            LOCATION -> GROUP_LOCATION
+            MICROPHONE -> GROUP_MICROPHONE
+            PHONE -> GROUP_PHONE
+            SENSORS -> GROUP_SENSORS
+            SMS -> GROUP_SMS
+            STORAGE -> GROUP_STORAGE
+            else -> arrayOf(permission)
         }
-        return new String[]{permission};
     }
 }
+

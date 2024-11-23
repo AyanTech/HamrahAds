@@ -5,12 +5,12 @@ import android.content.Context
 import android.content.Context.TELEPHONY_SERVICE
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.os.Build
 import android.telephony.TelephonyManager
 import android.webkit.WebView
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import ir.ayantech.hamrahads.domain.enums.Brand
-import ir.ayantech.hamrahads.domain.enums.Network
 import ir.ayantech.hamrahads.utils.deviceUtils.DeviceUtils
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -94,15 +94,15 @@ data class NetworkDeviceInfo(
     var gdprConsent: String? = null,
 ) {
     private suspend fun fillFields(context: Context): NetworkDeviceInfo {
-        this.appVer = DeviceUtils.getSDKVersionCode()
+        this.appVer = Build.VERSION.SDK_INT
         this.os = "android"
-        this.osVer = DeviceUtils.getSDKVersionName()
+        this.osVer = Build.VERSION.RELEASE
         try {
-            this.brand = Brand.valueOf(DeviceUtils.getManufacturer().lowercase())
+            this.brand = Brand.valueOf(Build.MANUFACTURER.lowercase())
         } catch (e: IllegalArgumentException) {
             this.brand = Brand.other
         }
-        this.model = DeviceUtils.getModel()
+        this.model =  getMyModel()
         this.width = DeviceUtils.getDisplayMetrics(
             context,
             DeviceUtils.DisplayMetric.WIDTH_PIXEL
@@ -165,7 +165,12 @@ data class NetworkDeviceInfo(
         return this
     }
 
-   private fun getCarrierName(context: Context): String? {
+    private fun getMyModel(): String {
+        val model = Build.MODEL?.trim()?.replace("\\s*".toRegex(), "") ?: ""
+        return model
+    }
+
+    private fun getCarrierName(context: Context): String? {
         val telephonyManager = context.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
         return if (telephonyManager.phoneType != TelephonyManager.PHONE_TYPE_NONE) {
             telephonyManager.networkOperatorName
@@ -174,7 +179,7 @@ data class NetworkDeviceInfo(
         }
     }
 
-      private fun isProviderEnabled(context: Context): Boolean {
+    private fun isProviderEnabled(context: Context): Boolean {
         val service = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return service.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }

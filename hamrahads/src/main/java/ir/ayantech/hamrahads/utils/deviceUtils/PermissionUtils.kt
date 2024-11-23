@@ -1,28 +1,19 @@
-package ir.ayantech.hamrahads.utils.deviceUtils;
+package ir.ayantech.hamrahads.utils.deviceUtils
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.WindowManager;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.content.ContextCompat;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.util.Log
+import android.view.MotionEvent
+import android.view.WindowManager
+import androidx.annotation.NonNull
+import androidx.annotation.Nullable
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 
 /**
  * <pre>
@@ -32,326 +23,300 @@ import java.util.Set;
  *     desc  : utils about permission
  * </pre>
  */
-public final class PermissionUtils {
+class PermissionUtils private constructor(vararg permissions: String) {
 
-    private static final List<String> PERMISSIONS = getPermissions();
+    private val mPermissions: MutableSet<String> = LinkedHashSet()
+    private val mPermissionsRequest: MutableList<String> = ArrayList()
+    private val mPermissionsGranted: MutableList<String> = ArrayList()
+    private val mPermissionsDenied: MutableList<String> = ArrayList()
+    private val mPermissionsDeniedForever: MutableList<String> = ArrayList()
 
-    private static PermissionUtils sInstance;
+    private var mOnRationaleListener: OnRationaleListener? = null
+    private var mSimpleCallback: SimpleCallback? = null
+    private var mFullCallback: FullCallback? = null
+    private var mThemeCallback: ThemeCallback? = null
 
-    private OnRationaleListener mOnRationaleListener;
-    private SimpleCallback      mSimpleCallback;
-    private FullCallback        mFullCallback;
-    private ThemeCallback       mThemeCallback;
-    private Set<String> mPermissions;
-    private List<String> mPermissionsRequest;
-    private List<String> mPermissionsGranted;
-    private List<String> mPermissionsDenied;
-    private List<String> mPermissionsDeniedForever;
-
-    /**
-     * Return the permissions used in application.
-     *
-     * @return the permissions used in application
-     */
-    public static List<String> getPermissions() {
-        return getPermissions(Utils.getApp().getPackageName());
-    }
-
-    /**
-     * Return the permissions used in application.
-     *
-     * @param packageName The name of the package.
-     * @return the permissions used in application
-     */
-    public static List<String> getPermissions(final String packageName) {
-        PackageManager pm = Utils.getApp().getPackageManager();
-        try {
-            return Arrays.asList(
-                    pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
-                            .requestedPermissions
-            );
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
-    }
-
-    /**
-     * Return whether <em>you</em> have granted the permissions.
-     *
-     * @param permissions The permissions.
-     * @return {@code true}: yes<br>{@code false}: no
-     */
-    public static boolean isGranted(final String... permissions) {
-        for (String permission : permissions) {
-            if (!isGranted(permission)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean isGranted(final String permission) {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-                || PackageManager.PERMISSION_GRANTED
-                == ContextCompat.checkSelfPermission(Utils.getApp(), permission);
-    }
-
-    /**
-     * Launch the application's details settings.
-     */
-    public static void launchAppDetailsSettings() {
-        Intent intent = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS");
-        intent.setData(Uri.parse("package:" + Utils.getApp().getPackageName()));
-        Utils.getApp().startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-    }
-
-    /**
-     * Set the permissions.
-     *
-     * @param permissions The permissions.
-     * @return the single {@link PermissionUtils} instance
-     */
-    public static PermissionUtils permission(@PermissionConstants.Permission final String... permissions) {
-        return new PermissionUtils(permissions);
-    }
-
-    private PermissionUtils(final String... permissions) {
-        mPermissions = new LinkedHashSet<>();
-        for (String permission : permissions) {
-            for (String aPermission : PermissionConstants.getPermissions(permission)) {
+    init {
+        for (permission in permissions) {
+            for (aPermission in PermissionConstants.getPermissions(permission)) {
                 if (PERMISSIONS.contains(aPermission)) {
-                    mPermissions.add(aPermission);
+                    mPermissions.add(aPermission)
                 }
             }
         }
-        sInstance = this;
+        sInstance = this
+    }
+
+    companion object {
+        private val PERMISSIONS: List<String> = getPermissions()
+        private var sInstance: PermissionUtils? = null
+
+        /**
+         * Return the permissions used in application.
+         *
+         * @return the permissions used in application
+         */
+        fun getPermissions(): List<String> {
+            return getPermissions(Utils.getApp().packageName)
+        }
+
+        /**
+         * Return the permissions used in application.
+         *
+         * @param packageName The name of the package.
+         * @return the permissions used in application
+         */
+        fun getPermissions(packageName: String): List<String> {
+            val pm = Utils.getApp().packageManager
+            return try {
+                pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS).requestedPermissions?.toList() ?: emptyList()
+            } catch (e: PackageManager.NameNotFoundException) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+
+        /**
+         * Return whether <em>you</em> have granted the permissions.
+         *
+         * @param permissions The permissions.
+         * @return {@code true}: yes<br>{@code false}: no
+         */
+        fun isGranted(vararg permissions: String): Boolean {
+            return permissions.all { isGranted(it) }
+        }
+
+        private fun isGranted(permission: String): Boolean {
+            return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                    ContextCompat.checkSelfPermission(Utils.getApp(), permission) == PackageManager.PERMISSION_GRANTED
+        }
+
+        /**
+         * Launch the application's details settings.
+         */
+        fun launchAppDetailsSettings() {
+            val intent = Intent("android.settings.APPLICATION_DETAILS_SETTINGS").apply {
+                data = Uri.parse("package:${Utils.getApp().packageName}")
+            }
+            Utils.getApp().startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+
+        /**
+         * Set the permissions.
+         *
+         * @param permissions The permissions.
+         * @return the single [PermissionUtils] instance
+         */
+        fun permission(vararg permissions: String): PermissionUtils {
+            return PermissionUtils(*permissions)
+        }
     }
 
     /**
      * Set rationale listener.
      *
      * @param listener The rationale listener.
-     * @return the single {@link PermissionUtils} instance
+     * @return the single [PermissionUtils] instance
      */
-    public PermissionUtils rationale(final OnRationaleListener listener) {
-        mOnRationaleListener = listener;
-        return this;
+    fun rationale(listener: OnRationaleListener): PermissionUtils {
+        mOnRationaleListener = listener
+        return this
     }
 
     /**
      * Set the simple call back.
      *
      * @param callback the simple call back
-     * @return the single {@link PermissionUtils} instance
+     * @return the single [PermissionUtils] instance
      */
-    public PermissionUtils callback(final SimpleCallback callback) {
-        mSimpleCallback = callback;
-        return this;
+    fun callback(callback: SimpleCallback): PermissionUtils {
+        mSimpleCallback = callback
+        return this
     }
 
     /**
      * Set the full call back.
      *
      * @param callback the full call back
-     * @return the single {@link PermissionUtils} instance
+     * @return the single [PermissionUtils] instance
      */
-    public PermissionUtils callback(final FullCallback callback) {
-        mFullCallback = callback;
-        return this;
+    fun callback(callback: FullCallback): PermissionUtils {
+        mFullCallback = callback
+        return this
     }
 
     /**
      * Set the theme callback.
      *
      * @param callback The theme callback.
-     * @return the single {@link PermissionUtils} instance
+     * @return the single [PermissionUtils] instance
      */
-    public PermissionUtils theme(final ThemeCallback callback) {
-        mThemeCallback = callback;
-        return this;
+    fun theme(callback: ThemeCallback): PermissionUtils {
+        mThemeCallback = callback
+        return this
     }
 
     /**
      * Start request.
      */
-    public void request() {
-        mPermissionsGranted = new ArrayList<>();
-        mPermissionsRequest = new ArrayList<>();
+    fun request() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            mPermissionsGranted.addAll(mPermissions);
-            requestCallback();
+            mPermissionsGranted.addAll(mPermissions)
+            requestCallback()
         } else {
-            for (String permission : mPermissions) {
+            for (permission in mPermissions) {
                 if (isGranted(permission)) {
-                    mPermissionsGranted.add(permission);
+                    mPermissionsGranted.add(permission)
                 } else {
-                    mPermissionsRequest.add(permission);
+                    mPermissionsRequest.add(permission)
                 }
             }
             if (mPermissionsRequest.isEmpty()) {
-                requestCallback();
+                requestCallback()
             } else {
-                startPermissionActivity();
+                startPermissionActivity()
             }
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void startPermissionActivity() {
-        mPermissionsDenied = new ArrayList<>();
-        mPermissionsDeniedForever = new ArrayList<>();
-        PermissionActivity.start(Utils.getApp());
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun startPermissionActivity() {
+        mPermissionsDenied.clear()
+        mPermissionsDeniedForever.clear()
+        PermissionActivity.start(Utils.getApp())
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private boolean rationale(final Activity activity) {
-        boolean isRationale = false;
-        if (mOnRationaleListener != null) {
-            for (String permission : mPermissionsRequest) {
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun rationale(activity: Activity): Boolean {
+        var isRationale = false
+        mOnRationaleListener?.let { listener ->
+            for (permission in mPermissionsRequest) {
                 if (activity.shouldShowRequestPermissionRationale(permission)) {
-                    getPermissionsStatus(activity);
-                    mOnRationaleListener.rationale(new OnRationaleListener.ShouldRequest() {
-                        @Override
-                        public void again(boolean again) {
+                    getPermissionsStatus(activity)
+                    listener.rationale(object : OnRationaleListener.ShouldRequest {
+                        override fun again(again: Boolean) {
                             if (again) {
-                                startPermissionActivity();
+                                startPermissionActivity()
                             } else {
-                                requestCallback();
+                                requestCallback()
                             }
                         }
-                    });
-                    isRationale = true;
-                    break;
+                    })
+                    isRationale = true
+                    break
                 }
             }
-            mOnRationaleListener = null;
+            mOnRationaleListener = null
         }
-        return isRationale;
+        return isRationale
     }
 
-    private void getPermissionsStatus(final Activity activity) {
-        for (String permission : mPermissionsRequest) {
+    private fun getPermissionsStatus(activity: Activity) {
+        for (permission in mPermissionsRequest) {
             if (isGranted(permission)) {
-                mPermissionsGranted.add(permission);
+                mPermissionsGranted.add(permission)
             } else {
-                mPermissionsDenied.add(permission);
+                mPermissionsDenied.add(permission)
                 if (!activity.shouldShowRequestPermissionRationale(permission)) {
-                    mPermissionsDeniedForever.add(permission);
+                    mPermissionsDeniedForever.add(permission)
                 }
             }
         }
     }
 
-    private void requestCallback() {
-        if (mSimpleCallback != null) {
-            if (mPermissionsRequest.size() == 0
-                    || mPermissions.size() == mPermissionsGranted.size()) {
-                mSimpleCallback.onGranted();
-            } else {
-                if (!mPermissionsDenied.isEmpty()) {
-                    mSimpleCallback.onDenied();
-                }
+    private fun requestCallback() {
+        mSimpleCallback?.let {
+            if (mPermissionsRequest.isEmpty() || mPermissions.size == mPermissionsGranted.size) {
+                it.onGranted()
+            } else if (mPermissionsDenied.isNotEmpty()) {
+                it.onDenied()
             }
-            mSimpleCallback = null;
+            mSimpleCallback = null
         }
-        if (mFullCallback != null) {
-            if (mPermissionsRequest.size() == 0
-                    || mPermissions.size() == mPermissionsGranted.size()) {
-                mFullCallback.onGranted(mPermissionsGranted);
-            } else {
-                if (!mPermissionsDenied.isEmpty()) {
-                    mFullCallback.onDenied(mPermissionsDeniedForever, mPermissionsDenied);
-                }
+        mFullCallback?.let {
+            if (mPermissionsRequest.isEmpty() || mPermissions.size == mPermissionsGranted.size) {
+                it.onGranted(mPermissionsGranted)
+            } else if (mPermissionsDenied.isNotEmpty()) {
+                it.onDenied(mPermissionsDeniedForever, mPermissionsDenied)
             }
-            mFullCallback = null;
+            mFullCallback = null
         }
-        mOnRationaleListener = null;
-        mThemeCallback = null;
+        mOnRationaleListener = null
+        mThemeCallback = null
     }
 
-    private void onRequestPermissionsResult(final Activity activity) {
-        getPermissionsStatus(activity);
-        requestCallback();
+    private fun onRequestPermissionsResult(activity: Activity) {
+        getPermissionsStatus(activity)
+        requestCallback()
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
+    class PermissionActivity : Activity() {
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public static class PermissionActivity extends Activity {
-
-        public static void start(final Context context) {
-            Intent starter = new Intent(context, PermissionActivity.class);
-            starter.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(starter);
+        companion object {
+            fun start(context: Context) {
+                val starter = Intent(context, PermissionActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(starter)
+            }
         }
 
-        @Override
-        protected void onCreate(@Nullable Bundle savedInstanceState) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                    | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
+        override fun onCreate(savedInstanceState: Bundle?) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
             if (sInstance == null) {
-                super.onCreate(savedInstanceState);
-                Log.e("PermissionUtils", "request permissions failed");
-                finish();
-                return;
+                super.onCreate(savedInstanceState)
+                Log.e("PermissionUtils", "request permissions failed")
+                finish()
+                return
             }
-            if (sInstance.mThemeCallback != null) {
-                sInstance.mThemeCallback.onActivityCreate(this);
-            }
-            super.onCreate(savedInstanceState);
+            sInstance?.mThemeCallback?.onActivityCreate(this)
+            super.onCreate(savedInstanceState)
 
-            if (sInstance.rationale(this)) {
-                finish();
-                return;
+            if (sInstance?.rationale(this) == true) {
+                finish()
+                return
             }
-            if (sInstance.mPermissionsRequest != null) {
-                int size = sInstance.mPermissionsRequest.size();
-                if (size <= 0) {
-                    finish();
-                    return;
+            sInstance?.mPermissionsRequest?.let {
+                if (it.isEmpty()) {
+                    finish()
+                    return
                 }
-                requestPermissions(sInstance.mPermissionsRequest.toArray(new String[size]), 1);
+                requestPermissions(it.toTypedArray(), 1)
             }
         }
 
-        @Override
-        public void onRequestPermissionsResult(int requestCode,
-                                               @NonNull String[] permissions,
-                                               @NonNull int[] grantResults) {
-            sInstance.onRequestPermissionsResult(this);
-            finish();
+        override fun onRequestPermissionsResult(requestCode: Int, @NonNull permissions: Array<out String>, @NonNull grantResults: IntArray) {
+            sInstance?.onRequestPermissionsResult(this)
+            finish()
         }
 
-        @Override
-        public boolean dispatchTouchEvent(MotionEvent ev) {
-            finish();
-            return true;
+        override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+            finish()
+            return true
         }
     }
 
-
-    public interface OnRationaleListener {
-
-        void rationale(ShouldRequest shouldRequest);
+    interface OnRationaleListener {
+        fun rationale(shouldRequest: ShouldRequest)
 
         interface ShouldRequest {
-            void again(boolean again);
+            fun again(again: Boolean)
         }
     }
 
-    public interface SimpleCallback {
-        void onGranted();
-
-        void onDenied();
+    interface SimpleCallback {
+        fun onGranted()
+        fun onDenied()
     }
 
-    public interface FullCallback {
-        void onGranted(List<String> permissionsGranted);
-
-        void onDenied(List<String> permissionsDeniedForever, List<String> permissionsDenied);
+    interface FullCallback {
+        fun onGranted(permissionsGranted: List<String>)
+        fun onDenied(permissionsDeniedForever: List<String>, permissionsDenied: List<String>)
     }
 
-    public interface ThemeCallback {
-        void onActivityCreate(Activity activity);
+    interface ThemeCallback {
+        fun onActivityCreate(activity: Activity)
     }
 }
+
