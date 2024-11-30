@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.kapt.plugin)
     alias(libs.plugins.kotlin.serialization.plugin)
+    id("maven-publish")
 }
 
 android {
@@ -34,6 +35,18 @@ android {
         jvmTarget = "1.8"
     }
 }
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.github.ayantech"
+                artifactId = "ayanads"
+                version = "0.1.2"
+            }
+        }
+    }
+}
 
 dependencies {
 
@@ -57,3 +70,6 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.sdp.android)
 }
+
+
+
