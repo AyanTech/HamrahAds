@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.kapt.plugin)
     alias(libs.plugins.kotlin.serialization.plugin)
-    id("maven-publish")
 }
 
 android {
@@ -33,18 +32,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
-    }
-}
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = "com.github.ayantech.ayanads"
-                artifactId = "HamrahAds"
-                version = "0.1.3"
-            }
-        }
     }
 }
 
