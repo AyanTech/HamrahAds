@@ -81,6 +81,7 @@ class ShowBannerAds(
             )
             scaleType = ImageView.ScaleType.FIT_XY
             setOnClickListener {
+                listener.onClick()
                 ioScope.launch {
                     banner.trackers?.click?.let {
                         BannerAdsRepository(NetworkModule(activity.applicationContext)).click(it)

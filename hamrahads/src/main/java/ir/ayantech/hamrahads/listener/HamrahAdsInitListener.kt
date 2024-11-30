@@ -6,4 +6,5 @@ interface HamrahAdsInitListener {
     fun onSuccess(){}
     fun onError(error: NetworkError){}
     fun onClose(){}
+    fun onClick(){}
 }

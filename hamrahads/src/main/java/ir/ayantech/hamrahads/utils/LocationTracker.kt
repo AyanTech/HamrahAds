@@ -1,6 +1,7 @@
 package ir.ayantech.hamrahads.utils
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -13,6 +14,7 @@ class LocationTracker (private val context: Context) {
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: LocationListener
 
+    @SuppressLint("MissingPermission")
     fun startTrackingLocation(onLocationReceived: (latitude: Double, longitude: Double) -> Unit) {
         locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -25,11 +27,6 @@ class LocationTracker (private val context: Context) {
                 override fun onLocationChanged(location: Location) {
                     val latitude = location.latitude
                     val longitude = location.longitude
-
-//                    PreferenceDataStoreHelper.putPreference(
-//                        PreferenceDataStoreConstants.REFRESH_TOKEN,
-//                        networkToken.refresh.toString()
-//                    )
 
                     onLocationReceived(latitude, longitude)
                     stopTrackingLocation()
@@ -48,6 +45,7 @@ class LocationTracker (private val context: Context) {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun stopTrackingLocation() {
         if (::locationManager.isInitialized && ::locationListener.isInitialized) {
             locationManager.removeUpdates(locationListener)

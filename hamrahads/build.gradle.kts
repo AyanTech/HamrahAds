@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "ir.ayantech.hamrahads"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21
@@ -55,5 +55,5 @@ dependencies {
     implementation(libs.play.services.ads.identifier)
     implementation(libs.coil.network.okhttp)
     implementation(libs.coil.gif)
-    implementation("com.intuit.sdp:sdp-android:1.1.1")
+    implementation(libs.sdp.android)
 }

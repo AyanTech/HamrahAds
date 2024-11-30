@@ -66,6 +66,11 @@ class BannerFragment : Fragment() {
                             override fun onError(error: NetworkError) {
                                 binding.textStatus.text = "onError ShowBannerAds " + error.code
                             }
+
+                            override fun onClick() {
+                                super.onClick()
+                                binding.textStatus.text = "onError ShowBannerAds onClick"
+                            }
                         }).build()
                 }
 

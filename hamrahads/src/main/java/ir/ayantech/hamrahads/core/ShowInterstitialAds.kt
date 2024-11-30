@@ -1,6 +1,6 @@
 package ir.ayantech.hamrahads.core
 
-import BlurTransformation
+import ir.ayantech.hamrahads.utils.BlurTransformation
 import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.res.Resources
@@ -734,6 +734,7 @@ class ShowInterstitialAds(
                     typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
                     text = interstitial.cta
                     setOnClickListener {
+                        listener.onClick()
                         ioScope.launch {
                             interstitial.trackers?.click?.let {
                                 InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(

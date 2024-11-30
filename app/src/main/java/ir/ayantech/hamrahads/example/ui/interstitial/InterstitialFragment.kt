@@ -66,6 +66,11 @@ class InterstitialFragment : Fragment() {
                                 binding.textStatus.text =
                                     "onClose ShowInterstitialAds "
                             }
+
+                            override fun onClick() {
+                                super.onClick()
+                                binding.textStatus.text = "onError ShowInterstitialAds onClick"
+                            }
                         }).build()
                 }
 

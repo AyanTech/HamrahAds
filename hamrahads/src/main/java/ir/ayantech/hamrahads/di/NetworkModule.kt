@@ -10,7 +10,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.net.Proxy
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class NetworkModule(private val context: Context) {

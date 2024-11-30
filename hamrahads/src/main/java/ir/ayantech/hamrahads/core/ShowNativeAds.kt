@@ -149,6 +149,7 @@ class ShowNativeAds(
                     R.id.hamrah_ad_native_cta_view -> {
                         if (childView is View) {
                             childView.setOnClickListener {
+                                listener.onClick()
                                 ioScope.launch {
                                     native.trackers?.click?.let {
                                         NativeAdsRepository(NetworkModule(activity.applicationContext)).click(
