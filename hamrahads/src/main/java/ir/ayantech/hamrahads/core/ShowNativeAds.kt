@@ -17,7 +17,6 @@ import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
-import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
@@ -75,6 +74,9 @@ class ShowNativeAds(
                     R.id.hamrah_ad_native_cta -> {
                         if (childView is Button) {
                             childView.text = native.cta
+                            childView.setOnClickListener {
+                                onClickView(native)
+                            }
                         }
                     }
 
@@ -149,19 +151,7 @@ class ShowNativeAds(
                     R.id.hamrah_ad_native_cta_view -> {
                         if (childView is View) {
                             childView.setOnClickListener {
-                                listener.onClick()
-                                ioScope.launch {
-                                    native.trackers?.click?.let {
-                                        NativeAdsRepository(NetworkModule(activity.applicationContext)).click(
-                                            it
-                                        )
-                                    }
-                                }
-                                handleIntent(
-                                    activity,
-                                    native.landingType,
-                                    native.landingLink
-                                )
+                                onClickView(native)
                             }
                         }
                     }
@@ -169,6 +159,22 @@ class ShowNativeAds(
             }
 
         }
+    }
+
+    private fun onClickView(native: NetworkNativeAd) {
+        listener.onClick()
+        ioScope.launch {
+            native.trackers?.click?.let {
+                NativeAdsRepository(NetworkModule(activity.applicationContext)).click(
+                    it
+                )
+            }
+        }
+        handleIntent(
+            activity,
+            native.landingType,
+            native.landingLink
+        )
     }
 
     fun destroyAds() {
