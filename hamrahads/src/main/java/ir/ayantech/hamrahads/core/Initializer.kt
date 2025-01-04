@@ -30,11 +30,11 @@ class Initializer(
             )
         }
         CoroutineScope(Dispatchers.IO).launch {
-            val initKey = PreferenceDataStoreHelper(context).getPreference(
+            val cachedInitKey = PreferenceDataStoreHelper(context).getPreference(
                 PreferenceDataStoreConstants.HamrahInitializer,
                 ""
             )
-            if (initKey.isEmpty()) {
+            if (cachedInitKey.isEmpty() || cachedInitKey != hamrahAdsId) {
                 when (val result =
                     InitializerRepository(NetworkModule(context)).fetchProfileInfo(hamrahAdsId)) {
                     is NetworkResult.Success -> {
