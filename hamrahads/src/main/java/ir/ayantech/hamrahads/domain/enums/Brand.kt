@@ -1,6 +1,6 @@
 package ir.ayantech.hamrahads.domain.enums
 
-  enum class Brand {
+enum class Brand {
     samsung,
     xiaomi,
     huawei,
