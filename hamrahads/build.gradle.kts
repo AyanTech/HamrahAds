@@ -49,7 +49,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.ayantech"
                 artifactId = "AyanAds"
-                version = "0.1.8"
+                version = "0.1.9"
             }
         }
     }
