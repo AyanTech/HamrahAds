@@ -20,11 +20,3 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-
-#-keep class ir.ayantech.hamrahads.** { *; }
-#-keepclassmembers class ir.ayantech.hamrahads.** {*;}
-#-keep class ir.ayantech.hamrahads.** { *; }
-
-#-keep class ir.ayantech.hamrahads.example.** { *; }
-#-keepclassmembers class ir.ayantech.hamrahads.example.** {*;}
-#-keep class ir.ayantech.hamrahads.example.** { *; }

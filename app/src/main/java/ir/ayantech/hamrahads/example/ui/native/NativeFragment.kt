@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
 import ir.ayantech.hamrahads.core.RequestNativeAds
@@ -12,6 +13,7 @@ import ir.ayantech.hamrahads.example.databinding.FragmentNativeBinding
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 
+@Keep
 class NativeFragment : Fragment() {
 
     private var _binding: FragmentNativeBinding? = null

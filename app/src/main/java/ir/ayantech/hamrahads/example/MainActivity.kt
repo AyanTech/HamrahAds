@@ -1,6 +1,7 @@
 package ir.ayantech.hamrahads.example
 
 import android.os.Bundle
+import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.findNavController
@@ -11,6 +12,7 @@ import ir.ayantech.hamrahads.example.databinding.ActivityMainBinding
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 
+@Keep
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding

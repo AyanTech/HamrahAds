@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
@@ -14,6 +15,7 @@ import ir.ayantech.hamrahads.example.databinding.FragmentInterstitialBinding
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 
+@Keep
 class InterstitialFragment : Fragment() {
 
     private var _binding: FragmentInterstitialBinding? = null

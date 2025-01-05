@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
 import ir.ayantech.hamrahads.core.RequestBannerAds
@@ -13,10 +14,8 @@ import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
 import ir.ayantech.hamrahads.example.databinding.FragmentBannerBinding
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
+@Keep
 class BannerFragment : Fragment() {
 
     private var _binding: FragmentBannerBinding? = null
