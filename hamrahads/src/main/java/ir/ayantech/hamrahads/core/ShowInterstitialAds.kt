@@ -94,133 +94,135 @@ class ShowInterstitialAds(
         }
     }
 
-    private fun initView4(interstitial: NetworkInterstitialAd) {
-        if (interstitial.webTemplateUrl.isNullOrEmpty()) {
-            destroyAds()
-            listener.onError(NetworkError().getError(6))
-            return
-        }
-        imageLoaderCount = 0
-
-        val screenSize = UnitUtils.getScreenSize(activity)
-        container = FrameLayout(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.RED)
-        }
-        container.setOnClickListener {
-            return@setOnClickListener
-        }
-        urlWebView = WebView(activity.applicationContext).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
-            settings.javaScriptEnabled = true
-            webViewClient = object : WebViewClient() {
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
-                    loadContainer(interstitial)
-                }
-
-                override fun onReceivedSslError(
-                    view: WebView?,
-                    handler: SslErrorHandler?,
-                    error: SslError?
-                ) {
-                    super.onReceivedSslError(view, handler, error)
-                    listener.onError(NetworkError().getError(7))
-                }
-
-                override fun onReceivedHttpError(
-                    view: WebView?,
-                    request: WebResourceRequest?,
-                    errorResponse: WebResourceResponse?
-                ) {
-                    super.onReceivedHttpError(view, request, errorResponse)
-                    listener.onError(NetworkError().getError(7))
-                }
-
-                override fun onReceivedError(
-                    view: WebView?,
-                    request: WebResourceRequest?,
-                    error: WebResourceError?
-                ) {
-                    super.onReceivedError(view, request, error)
-                    listener.onError(NetworkError().getError(7))
-                }
-            }
-        }
-        interstitial.webTemplateUrl?.let {
-            urlWebView.loadUrl(it)
-        }
-
-        countdownCardView = CardView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                ((screenSize[1] * 0.07)).toInt()
-            ).apply {
-                topMargin = 24
-                rightMargin = 24
-                gravity = Gravity.TOP or Gravity.END
-            }
-            setCardBackgroundColor(Color.WHITE)
-            cardElevation = 6f
-            radius = 50f
-
-            val linear = LinearLayout(activity).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                ).apply {
-                }
-                gravity = Gravity.CENTER
-
-                countdownTextView = TextView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        ((screenSize[1] * 0.15)).toInt(),
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        maxLines = 1
-                    }
-                    gravity = Gravity.CENTER
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
-                    setTextColor(Color.BLACK)
-                }
-
-                val closeTextView = TextView(activity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        marginEnd = 20
-                    }
-                    text = resources.getText(R.string.hamrah_ads_font_close)
-                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-                    setTextColor(Color.BLACK)
-                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-                }
-                addView(countdownTextView)
-                addView(closeTextView)
-            }
-            addView(linear)
-            setOnClickListener {
-                if (isBackPressed) {
-                    listener.onClose()
-                    destroyAds()
-                }
-            }
-        }
-    }
+//    private fun initView4(interstitial: NetworkInterstitialAd) {
+//        if (interstitial.webTemplateUrl.isNullOrEmpty()) {
+//            destroyAds()
+//            listener.onError(NetworkError().getError(6))
+//            return
+//        }
+//        imageLoaderCount = 0
+//
+//        val screenSize = UnitUtils.getScreenSize(activity)
+//        container = FrameLayout(activity).apply {
+//            layoutParams = FrameLayout.LayoutParams(
+//                FrameLayout.LayoutParams.MATCH_PARENT,
+//                FrameLayout.LayoutParams.MATCH_PARENT
+//            )
+//            setBackgroundColor(Color.RED)
+//        }
+//        container.setOnClickListener {
+//            return@setOnClickListener
+//        }
+//        urlWebView = WebView(activity.applicationContext).apply {
+//            layoutParams = FrameLayout.LayoutParams(
+//                FrameLayout.LayoutParams.MATCH_PARENT,
+//                FrameLayout.LayoutParams.MATCH_PARENT
+//            ).apply {
+//                gravity = Gravity.CENTER
+//            }
+//            settings.javaScriptEnabled = true
+//            webViewClient = object : WebViewClient() {
+//                override fun onPageFinished(view: WebView?, url: String?) {
+//                    super.onPageFinished(view, url)
+//                    loadContainer(interstitial)
+//                }
+//
+//                override fun onReceivedSslError(
+//                    view: WebView?,
+//                    handler: SslErrorHandler?,
+//                    error: SslError?
+//                ) {
+//                    super.onReceivedSslError(view, handler, error)
+//                    listener.onError(NetworkError().getError(7))
+//                }
+//
+//                override fun onReceivedHttpError(
+//                    view: WebView?,
+//                    request: WebResourceRequest?,
+//                    errorResponse: WebResourceResponse?
+//                ) {
+//                    super.onReceivedHttpError(view, request, errorResponse)
+//                    listener.onError(NetworkError().getError(7))
+//                }
+//
+//                override fun onReceivedError(
+//                    view: WebView?,
+//                    request: WebResourceRequest?,
+//                    error: WebResourceError?
+//                ) {
+//                    super.onReceivedError(view, request, error)
+//                    listener.onError(NetworkError().getError(7))
+//                }
+//            }
+//        }
+//        interstitial.webTemplateUrl?.let {
+//            urlWebView.loadUrl(it)
+//        }
+//
+//        countdownCardView = CardView(activity).apply {
+//            layoutParams = FrameLayout.LayoutParams(
+//                FrameLayout.LayoutParams.WRAP_CONTENT,
+//                ((screenSize[1] * 0.07)).toInt()
+//            ).apply {
+//                topMargin = 24
+//                rightMargin = 24
+//                gravity = Gravity.TOP or Gravity.END
+//            }
+//            setCardBackgroundColor(Color.WHITE)
+//            cardElevation = 6f
+//            radius = 50f
+//
+//            val linear = LinearLayout(activity).apply {
+//                layoutParams = FrameLayout.LayoutParams(
+//                    FrameLayout.LayoutParams.MATCH_PARENT,
+//                    FrameLayout.LayoutParams.MATCH_PARENT
+//                ).apply {
+//                }
+//                gravity = Gravity.CENTER
+//
+//                countdownTextView = TextView(activity).apply {
+//                    layoutParams = FrameLayout.LayoutParams(
+//                        ((screenSize[1] * 0.15)).toInt(),
+//                        FrameLayout.LayoutParams.WRAP_CONTENT
+//                    ).apply {
+//                        maxLines = 1
+//                    }
+//                    gravity = Gravity.CENTER
+//                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
+//                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
+//                    setTextColor(Color.BLACK)
+//                }
+//
+//                val closeTextView = TextView(activity).apply {
+//                    layoutParams = FrameLayout.LayoutParams(
+//                        FrameLayout.LayoutParams.WRAP_CONTENT,
+//                        FrameLayout.LayoutParams.WRAP_CONTENT
+//                    ).apply {
+//                        marginEnd = 20
+//                    }
+//                    text = resources.getText(R.string.hamrah_ads_font_close)
+//                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
+//                    setTextColor(Color.BLACK)
+//                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
+//                }
+//                addView(countdownTextView)
+//                addView(closeTextView)
+//            }
+//            addView(linear)
+//            setOnClickListener {
+//                if (isBackPressed) {
+//                    listener.onClose()
+//                    destroyAds()
+//                }
+//            }
+//        }
+//    }
 
     private fun initView3(interstitial: NetworkInterstitialAd) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
+            || interstitial.caption.isNullOrEmpty()
+            || interstitial.cta.isNullOrEmpty()
             || interstitial.landingLink.isNullOrEmpty()
             || interstitial.logo.isNullOrEmpty()
             || interstitial.trackers?.click.isNullOrEmpty()
@@ -233,7 +235,6 @@ class ShowInterstitialAds(
 
         imageLoaderCount = 1
 
-        val screenSize = UnitUtils.getScreenSize(activity)
         container = FrameLayout(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -392,6 +393,8 @@ class ShowInterstitialAds(
     private fun initView2(interstitial: NetworkInterstitialAd) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
+            || interstitial.caption.isNullOrEmpty()
+            || interstitial.cta.isNullOrEmpty()
             || interstitial.landingLink.isNullOrEmpty()
             || interstitial.logo.isNullOrEmpty()
             || interstitial.trackers?.click.isNullOrEmpty()
@@ -404,7 +407,6 @@ class ShowInterstitialAds(
 
         imageLoaderCount = 1
 
-        val screenSize = UnitUtils.getScreenSize(activity)
         container = FrameLayout(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -541,6 +543,8 @@ class ShowInterstitialAds(
     private fun initView1(interstitial: NetworkInterstitialAd) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
+            || interstitial.caption.isNullOrEmpty()
+            || interstitial.cta.isNullOrEmpty()
             || interstitial.landingLink.isNullOrEmpty()
             || interstitial.logo.isNullOrEmpty()
             || interstitial.trackers?.click.isNullOrEmpty()
@@ -552,7 +556,6 @@ class ShowInterstitialAds(
         }
 
         imageLoaderCount = 2
-        val screenSize = UnitUtils.getScreenSize(activity)
         container = FrameLayout(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -761,6 +764,7 @@ class ShowInterstitialAds(
             ).apply {
                 topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
                 rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+                leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
                 gravity = Gravity.TOP or Gravity.END
             }
             setCardBackgroundColor(Color.WHITE)

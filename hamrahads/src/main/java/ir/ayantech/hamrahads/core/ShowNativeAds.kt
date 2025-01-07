@@ -41,8 +41,9 @@ class ShowNativeAds(
             null
         )
         if (native?.landingType != null
+            && !native.cta.isNullOrEmpty()
+            && !native.caption.isNullOrEmpty()
             && !native.landingLink.isNullOrEmpty()
-            && !native.banner1136x640.isNullOrEmpty()
             && !native.trackers?.click.isNullOrEmpty()
             && !native.trackers?.impression.isNullOrEmpty()
         ) {
@@ -81,7 +82,7 @@ class ShowNativeAds(
                     }
 
                     R.id.hamrah_ad_native_logo -> {
-                        if (childView is ImageView) {
+                        if (childView is ImageView && !native.logo.isNullOrEmpty()) {
                             val imageLoader = ImageLoader.Builder(activity.applicationContext)
                                 .build()
                             imageLoader.enqueue(
@@ -97,16 +98,6 @@ class ShowNativeAds(
                                                     .data(result.asDrawable(Resources.getSystem()))
                                                     .build()
                                             )
-                                            ioScope.launch {
-                                                native.trackers?.impression?.let {
-                                                    NativeAdsRepository(NetworkModule(activity.applicationContext))
-                                                        .impression(it)
-                                                }
-                                                PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                                                    PreferenceDataStoreConstants.HamrahAdsNative
-                                                )
-                                            }
-                                            listener.onSuccess()
                                         },
                                         onError = { error ->
                                             listener.onError(NetworkError().getError(5))
@@ -120,7 +111,7 @@ class ShowNativeAds(
                     }
 
                     R.id.hamrah_ad_native_banner -> {
-                        if (childView is ImageView) {
+                        if (childView is ImageView && !native.banner1136x640.isNullOrEmpty()) {
                             val imageLoader = ImageLoader.Builder(activity.applicationContext)
                                 .build()
                             imageLoader.enqueue(
@@ -157,8 +148,17 @@ class ShowNativeAds(
                     }
                 }
             }
-
         }
+        ioScope.launch {
+            native.trackers?.impression?.let {
+                NativeAdsRepository(NetworkModule(activity.applicationContext))
+                    .impression(it)
+            }
+            PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
+                PreferenceDataStoreConstants.HamrahAdsNative
+            )
+        }
+        listener.onSuccess()
     }
 
     private fun onClickView(native: NetworkNativeAd) {
