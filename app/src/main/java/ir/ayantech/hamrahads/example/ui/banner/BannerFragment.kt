@@ -55,7 +55,7 @@ class BannerFragment : Fragment() {
 
                     showBannerAds = HamrahAds.ShowBannerAds()
                         .setContext(requireActivity())
-                        .setSize(HamrahAdsBannerType.BANNER_320x50)
+                        .setSize(HamrahAdsBannerType.BANNER_1136x640)
                         .setViewGroup(binding.banner)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {

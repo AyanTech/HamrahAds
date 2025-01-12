@@ -56,15 +56,15 @@ class ShowBannerAds(
     }
 
     private fun showView(banner: NetworkBannerAd) {
-        var (width, height) = size.getSize()
+//        var (width, height) = size.getSize()
 
-        width = UnitUtils.dpToPx(width, activity.applicationContext)
-        height = UnitUtils.dpToPx(height, activity.applicationContext)
+//        width = UnitUtils.dpToPx(width, activity.applicationContext)
+//        height = UnitUtils.dpToPx(height, activity.applicationContext)
 
         container = FrameLayout(activity)
         val params = FrameLayout.LayoutParams(
-            width,
-            height
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
         ).apply {
             if (viewGroup == null) {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
@@ -76,8 +76,8 @@ class ShowBannerAds(
         }
         val adImage = AppCompatImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
-                width,
-                height
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
             )
             scaleType = ImageView.ScaleType.FIT_XY
             setOnClickListener {
