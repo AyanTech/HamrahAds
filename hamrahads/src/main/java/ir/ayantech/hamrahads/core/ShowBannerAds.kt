@@ -18,7 +18,6 @@ import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
-import ir.ayantech.hamrahads.utils.UnitUtils
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -80,6 +79,7 @@ class ShowBannerAds(
                 FrameLayout.LayoutParams.WRAP_CONTENT
             )
             scaleType = ImageView.ScaleType.FIT_XY
+            adjustViewBounds = true
             setOnClickListener {
                 listener.onClick()
                 ioScope.launch {
