@@ -1,21 +1,14 @@
 package ir.ayantech.hamrahads.core
 
-import ir.ayantech.hamrahads.utils.BlurTransformation
 import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.res.Resources
 import android.graphics.Color
-import android.net.http.SslError
 import android.os.CountDownTimer
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.SslErrorHandler
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -37,7 +30,7 @@ import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkInterstitialAd
 import ir.ayantech.hamrahads.repository.InterstitialAdsRepository
-import ir.ayantech.hamrahads.utils.UnitUtils
+import ir.ayantech.hamrahads.utils.BlurTransformation
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -255,7 +248,8 @@ class ShowInterstitialAds(
                 gravity = Gravity.TOP
                 topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._150sdp)
             }
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_XY
+            adjustViewBounds = true
         }
 
         iconImageView = ImageView(activity).apply {
@@ -424,7 +418,8 @@ class ShowInterstitialAds(
             ).apply {
                 gravity = Gravity.TOP
             }
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_XY
+            adjustViewBounds = true
         }
 
         titleTextView = TextView(activity).apply {
@@ -436,7 +431,7 @@ class ShowInterstitialAds(
                 topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._195sdp)
                 rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
                 leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-                textSize =resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
                 setTextColor(Color.BLACK)
                 typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
                 text = interstitial.caption
@@ -450,8 +445,8 @@ class ShowInterstitialAds(
                 FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP
-                topMargin =  resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._225sdp)
-                textSize =resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._225sdp)
+                textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
                 rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
                 leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
                 setTextColor(Color.BLACK)
@@ -588,6 +583,7 @@ class ShowInterstitialAds(
                 topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._50sdp)
             }
             scaleType = ImageView.ScaleType.FIT_XY
+            adjustViewBounds = true
         }
 
         iconImageView = ImageView(activity).apply {
@@ -596,7 +592,7 @@ class ShowInterstitialAds(
                 resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._70sdp)
             ).apply {
                 gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-                topMargin =   resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._215sdp)
+                topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._215sdp)
             }
             scaleType = ImageView.ScaleType.FIT_XY
         }
@@ -714,7 +710,7 @@ class ShowInterstitialAds(
             .build())
     }
 
-    private fun button(interstitial: NetworkInterstitialAd){
+    private fun button(interstitial: NetworkInterstitialAd) {
         installCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._170sdp),
@@ -915,7 +911,14 @@ class ShowInterstitialAds(
     }
 
     private fun timeToSkip(seconds: Int) {
-        if (seconds == 0) return
+        if (seconds == 0) {
+            if (::countdownTextView.isInitialized)
+                countdownTextView.text =
+                    activity.applicationContext.getString(
+                        R.string.hamrah_ads_end
+                    )
+            return
+        }
         isBackPressed = false
         countDownTimerSkip = object : CountDownTimer(seconds * 1000L, 1000) {
             override fun onTick(millisUntilFinished: Long) {
