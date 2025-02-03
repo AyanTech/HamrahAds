@@ -59,6 +59,7 @@ class BannerFragment : Fragment() {
                         .setViewGroup(binding.banner)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {
+                                Log.i("wqepgojqpofgjegqw", "onSuccess 111")
                                 binding.textStatus.text = "onSuccess ShowBannerAds"
                             }
 

@@ -1,6 +1,7 @@
 package ir.ayantech.hamrahads.example.ui.native
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,6 +49,7 @@ class NativeFragment : Fragment() {
             .initId("00ea8b15-eb29-40f9-80ab-3bd92a631a89")
             .initListener(object : HamrahAdsInitListener {
                 override fun onSuccess() {
+                    Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestNativeAds"
 
                     showNativeAds = HamrahAds.ShowNativeAds()
@@ -55,6 +57,7 @@ class NativeFragment : Fragment() {
                         .setViewGroup(binding.nativeView)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {
+                                Log.i("wqepgojqpofgjegqw", "onSuccess 111")
                                 binding.nativeView.visibility = View.VISIBLE
                                 binding.textStatus.text = "onSuccess ShowNativeAds"
                             }

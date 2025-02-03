@@ -2,6 +2,7 @@ package ir.ayantech.hamrahads.core
 
 import android.app.Activity
 import android.content.res.Resources
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -48,6 +49,7 @@ class ShowNativeAds(
             && !native.trackers?.impression.isNullOrEmpty()
         ) {
             showView(viewGroup, native)
+            setTrackers(native)
         } else {
             listener.onError(NetworkError().getError(6))
         }
@@ -149,6 +151,9 @@ class ShowNativeAds(
                 }
             }
         }
+    }
+
+    private fun setTrackers(native: NetworkNativeAd) {
         ioScope.launch {
             native.trackers?.impression?.let {
                 NativeAdsRepository(NetworkModule(activity.applicationContext))
