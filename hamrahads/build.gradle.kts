@@ -42,7 +42,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.ayantech"
                 artifactId = "HamrahAds"
-                version = "0.1.16"
+                version = "0.1.17"
             }
         }
     }
