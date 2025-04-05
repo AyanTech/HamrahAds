@@ -1,11 +1,11 @@
 package ir.ayantech.hamrahads.core
 
-import android.app.Activity
 import android.content.res.Resources
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageView
 import coil3.ImageLoader
 import coil3.asDrawable
@@ -18,6 +18,7 @@ import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
+import ir.ayantech.hamrahads.utils.KeyboardUtils.setKeyboardVisibilityListener
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -28,7 +29,7 @@ import kotlinx.coroutines.launch
 
 
 class ShowBannerAds(
-    private val activity: Activity,
+    private val activity: AppCompatActivity,
     private val size: HamrahAdsBannerType,
     private var viewGroup: ViewGroup? = null,
     private val listener: HamrahAdsInitListener
@@ -140,6 +141,10 @@ class ShowBannerAds(
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
+
+        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
+            listener.onKeyboardVisibility(container, isKeyboardVisible)
+        }
     }
 
     fun destroyAds() {

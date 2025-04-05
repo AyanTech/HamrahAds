@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         HamrahAds.Initializer()
             .setContext(applicationContext)
-            .initId("7b4b488a40a0c1dfe0ff73688766d79cab88274d21b16ff3f3af7157fabc692c")
+            .initId("8765224ae941c1ad721d35777f90eec4160c2193f726d566df46dbab8aa0008e")
             .initListener(object : HamrahAdsInitListener {
                 override fun onSuccess() {
 

@@ -72,12 +72,12 @@ class HamrahAds {
     }
 
     class ShowBannerAds {
-        private lateinit var activity: Activity
+        private lateinit var activity: AppCompatActivity
         private lateinit var size: HamrahAdsBannerType
         private var viewGroup: ViewGroup? = null
         private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
 
-        fun setContext(activity: Activity) = apply {
+        fun setContext(activity: AppCompatActivity) = apply {
             this.activity = activity
         }
 
@@ -195,11 +195,11 @@ class HamrahAds {
     }
 
     class ShowNativeAds {
-        private lateinit var activity: Activity
+        private lateinit var activity: AppCompatActivity
         private lateinit var viewGroup: ViewGroup
         private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
 
-        fun setContext(activity: Activity) = apply {
+        fun setContext(activity: AppCompatActivity) = apply {
             this.activity = activity
         }
 

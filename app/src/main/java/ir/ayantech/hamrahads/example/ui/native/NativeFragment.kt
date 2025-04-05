@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.Keep
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
 import ir.ayantech.hamrahads.core.RequestNativeAds
@@ -46,14 +47,14 @@ class NativeFragment : Fragment() {
     private fun requestNativeAds() {
         requestNativeAds = HamrahAds.RequestNativeAds()
             .setContext(requireActivity())
-            .initId("00ea8b15-eb29-40f9-80ab-3bd92a631a89")
+            .initId("d3f8b412-e4a9-4373-861f-4836dab21939")
             .initListener(object : HamrahAdsInitListener {
                 override fun onSuccess() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestNativeAds"
 
                     showNativeAds = HamrahAds.ShowNativeAds()
-                        .setContext(requireActivity())
+                        .setContext(requireActivity() as AppCompatActivity)
                         .setViewGroup(binding.nativeView)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {
@@ -69,6 +70,19 @@ class NativeFragment : Fragment() {
                             override fun onClick() {
                                 super.onClick()
                                 binding.textStatus.text = "onError ShowNativeAds onClick"
+                            }
+
+                            override fun onKeyboardVisibility(
+                                viewGroup: ViewGroup,
+                                isKeyboardVisible: Boolean
+                            ) {
+                                super.onKeyboardVisibility(viewGroup, isKeyboardVisible)
+
+                                if (isKeyboardVisible) {
+                                    viewGroup.visibility = View.GONE
+                                } else {
+                                    viewGroup.visibility = View.VISIBLE
+                                }
                             }
                         }).build()
                 }

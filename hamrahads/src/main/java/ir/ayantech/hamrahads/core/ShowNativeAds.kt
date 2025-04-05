@@ -1,13 +1,12 @@
 package ir.ayantech.hamrahads.core
 
-import android.app.Activity
 import android.content.res.Resources
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.CachePolicy
@@ -19,6 +18,7 @@ import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
+import ir.ayantech.hamrahads.utils.KeyboardUtils.setKeyboardVisibilityListener
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -29,8 +29,8 @@ import kotlinx.coroutines.launch
 
 
 class ShowNativeAds(
-    private val activity: Activity,
-    private var viewGroup: ViewGroup,
+    private val activity: AppCompatActivity,
+    private val viewGroup: ViewGroup,
     private val listener: HamrahAdsInitListener
 ) {
     private val job = SupervisorJob()
@@ -150,6 +150,9 @@ class ShowNativeAds(
                     }
                 }
             }
+        }
+        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
+            listener.onKeyboardVisibility(viewGroup, isKeyboardVisible)
         }
     }
 

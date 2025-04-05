@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.Keep
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
 import ir.ayantech.hamrahads.core.RequestBannerAds
@@ -47,19 +48,18 @@ class BannerFragment : Fragment() {
     private fun showBannerAds() {
         requestBanner = HamrahAds.RequestBannerAds()
             .setContext(requireContext())
-            .initId("e35f5d8d-a952-4bdf-b63e-7aa8d6de9753")
+            .initId("e17beb85-1b7e-40f1-a312-ab947840590e")
             .initListener(object : HamrahAdsInitListener {
                 override fun onSuccess() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestBannerAds"
 
                     showBannerAds = HamrahAds.ShowBannerAds()
-                        .setContext(requireActivity())
-                        .setSize(HamrahAdsBannerType.BANNER_1136x640)
+                        .setContext(requireActivity() as AppCompatActivity)
+                        .setSize(HamrahAdsBannerType.BANNER_320x50)
                         .setViewGroup(binding.banner)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {
-                                Log.i("wqepgojqpofgjegqw", "onSuccess 111")
                                 binding.textStatus.text = "onSuccess ShowBannerAds"
                             }
 
@@ -70,6 +70,20 @@ class BannerFragment : Fragment() {
                             override fun onClick() {
                                 super.onClick()
                                 binding.textStatus.text = "onError ShowBannerAds onClick"
+                            }
+
+                            override fun onKeyboardVisibility(
+                                viewGroup: ViewGroup,
+                                isKeyboardVisible: Boolean
+                            ) {
+                                super.onKeyboardVisibility(viewGroup, isKeyboardVisible)
+                                binding.textStatus.text =
+                                    "onKeyboardVisibility " + isKeyboardVisible
+                                if (isKeyboardVisible) {
+                                    viewGroup.visibility = View.GONE
+                                } else {
+                                    viewGroup.visibility = View.VISIBLE
+                                }
                             }
                         }).build()
                 }

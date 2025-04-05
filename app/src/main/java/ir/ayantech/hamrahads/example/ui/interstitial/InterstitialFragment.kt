@@ -48,7 +48,7 @@ class InterstitialFragment : Fragment() {
     private fun requestInterstitialAds() {
         requestInterstitial = HamrahAds.RequestInterstitialAds()
             .setContext(requireContext())
-            .initId("20521bed-d9dc-4198-bc22-b026b6e696d3")
+            .initId("094afc16-54fa-4738-b893-01fdf01ff330")
             .initListener(object : HamrahAdsInitListener {
                 override fun onSuccess() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
