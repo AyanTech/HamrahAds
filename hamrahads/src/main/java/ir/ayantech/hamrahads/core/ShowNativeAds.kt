@@ -18,7 +18,6 @@ import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
-import ir.ayantech.hamrahads.utils.KeyboardUtils.setKeyboardVisibilityListener
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -151,9 +150,9 @@ class ShowNativeAds(
                 }
             }
         }
-        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
-            listener.onKeyboardVisibility(viewGroup, isKeyboardVisible)
-        }
+//        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
+//            listener.onKeyboardVisibility(viewGroup, isKeyboardVisible)
+//        }
     }
 
     private fun setTrackers(native: NetworkNativeAd) {

@@ -18,7 +18,6 @@ import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
-import ir.ayantech.hamrahads.utils.KeyboardUtils.setKeyboardVisibilityListener
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -142,9 +141,9 @@ class ShowBannerAds(
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
 
-        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
-            listener.onKeyboardVisibility(container, isKeyboardVisible)
-        }
+//        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
+//            listener.onKeyboardVisibility(container, isKeyboardVisible)
+//        }
     }
 
     fun destroyAds() {

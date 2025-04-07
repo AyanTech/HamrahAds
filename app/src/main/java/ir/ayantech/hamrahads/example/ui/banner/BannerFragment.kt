@@ -72,19 +72,19 @@ class BannerFragment : Fragment() {
                                 binding.textStatus.text = "onError ShowBannerAds onClick"
                             }
 
-                            override fun onKeyboardVisibility(
-                                viewGroup: ViewGroup,
-                                isKeyboardVisible: Boolean
-                            ) {
-                                super.onKeyboardVisibility(viewGroup, isKeyboardVisible)
-                                binding.textStatus.text =
-                                    "onKeyboardVisibility " + isKeyboardVisible
-                                if (isKeyboardVisible) {
-                                    viewGroup.visibility = View.GONE
-                                } else {
-                                    viewGroup.visibility = View.VISIBLE
-                                }
-                            }
+//                            override fun onKeyboardVisibility(
+//                                viewGroup: ViewGroup,
+//                                isKeyboardVisible: Boolean
+//                            ) {
+//                                super.onKeyboardVisibility(viewGroup, isKeyboardVisible)
+//                                binding.textStatus.text =
+//                                    "onKeyboardVisibility " + isKeyboardVisible
+//                                if (isKeyboardVisible) {
+//                                    viewGroup.visibility = View.GONE
+//                                } else {
+//                                    viewGroup.visibility = View.VISIBLE
+//                                }
+//                            }
                         }).build()
                 }
 

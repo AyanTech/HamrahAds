@@ -72,18 +72,18 @@ class NativeFragment : Fragment() {
                                 binding.textStatus.text = "onError ShowNativeAds onClick"
                             }
 
-                            override fun onKeyboardVisibility(
-                                viewGroup: ViewGroup,
-                                isKeyboardVisible: Boolean
-                            ) {
-                                super.onKeyboardVisibility(viewGroup, isKeyboardVisible)
-
-                                if (isKeyboardVisible) {
-                                    viewGroup.visibility = View.GONE
-                                } else {
-                                    viewGroup.visibility = View.VISIBLE
-                                }
-                            }
+//                            override fun onKeyboardVisibility(
+//                                viewGroup: ViewGroup,
+//                                isKeyboardVisible: Boolean
+//                            ) {
+//                                super.onKeyboardVisibility(viewGroup, isKeyboardVisible)
+//
+//                                if (isKeyboardVisible) {
+//                                    viewGroup.visibility = View.GONE
+//                                } else {
+//                                    viewGroup.visibility = View.VISIBLE
+//                                }
+//                            }
                         }).build()
                 }
 
