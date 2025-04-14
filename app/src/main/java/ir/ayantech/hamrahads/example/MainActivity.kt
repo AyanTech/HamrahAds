@@ -1,6 +1,9 @@
 package ir.ayantech.hamrahads.example
 
 import android.os.Bundle
+import android.util.Log
+import android.view.KeyEvent
+import android.view.Window
 import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -41,7 +44,6 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }).build()
+
     }
-
 }
-

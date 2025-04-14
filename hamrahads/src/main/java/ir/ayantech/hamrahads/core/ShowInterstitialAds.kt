@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.os.CountDownTimer
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -13,7 +14,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
@@ -59,6 +59,8 @@ class ShowInterstitialAds(
     private lateinit var countDownTimerSkip: CountDownTimer
     private lateinit var countDownTimerOut: CountDownTimer
     private lateinit var resources: Resources
+
+    private val rootView = activity.window.decorView.rootView
 
     private lateinit var allView: ViewGroup
     private var isBackPressed = true
@@ -874,16 +876,19 @@ class ShowInterstitialAds(
             )
         }
 
-        activity.onBackPressedDispatcher.addCallback(
-            activity,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (isBackPressed) {
-                        destroyAds()
-                        remove()
-                    }
+        rootView.isFocusableInTouchMode = true
+        rootView.requestFocus()
+        rootView.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+                if (isBackPressed) {
+                    destroyAds()
+                    rootView.setOnKeyListener(null)
+                    return@setOnKeyListener true
                 }
-            })
+                return@setOnKeyListener true
+            }
+            false
+        }
 
         listener.onSuccess()
     }
