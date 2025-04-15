@@ -2,13 +2,17 @@ package ir.ayantech.hamrahads.core
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
+import android.app.Dialog
 import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.CountDownTimer
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -60,9 +64,7 @@ class ShowInterstitialAds(
     private lateinit var countDownTimerOut: CountDownTimer
     private lateinit var resources: Resources
 
-    private val rootView = activity.window.decorView.rootView
-
-    private lateinit var allView: ViewGroup
+    private lateinit var dialog: Dialog
     private var isBackPressed = true
 
     private var imageLoaderCount = 0
@@ -88,130 +90,6 @@ class ShowInterstitialAds(
             listener.onError(NetworkError().getError(6))
         }
     }
-
-//    private fun initView4(interstitial: NetworkInterstitialAd) {
-//        if (interstitial.webTemplateUrl.isNullOrEmpty()) {
-//            destroyAds()
-//            listener.onError(NetworkError().getError(6))
-//            return
-//        }
-//        imageLoaderCount = 0
-//
-//        val screenSize = UnitUtils.getScreenSize(activity)
-//        container = FrameLayout(activity).apply {
-//            layoutParams = FrameLayout.LayoutParams(
-//                FrameLayout.LayoutParams.MATCH_PARENT,
-//                FrameLayout.LayoutParams.MATCH_PARENT
-//            )
-//            setBackgroundColor(Color.RED)
-//        }
-//        container.setOnClickListener {
-//            return@setOnClickListener
-//        }
-//        urlWebView = WebView(activity.applicationContext).apply {
-//            layoutParams = FrameLayout.LayoutParams(
-//                FrameLayout.LayoutParams.MATCH_PARENT,
-//                FrameLayout.LayoutParams.MATCH_PARENT
-//            ).apply {
-//                gravity = Gravity.CENTER
-//            }
-//            settings.javaScriptEnabled = true
-//            webViewClient = object : WebViewClient() {
-//                override fun onPageFinished(view: WebView?, url: String?) {
-//                    super.onPageFinished(view, url)
-//                    loadContainer(interstitial)
-//                }
-//
-//                override fun onReceivedSslError(
-//                    view: WebView?,
-//                    handler: SslErrorHandler?,
-//                    error: SslError?
-//                ) {
-//                    super.onReceivedSslError(view, handler, error)
-//                    listener.onError(NetworkError().getError(7))
-//                }
-//
-//                override fun onReceivedHttpError(
-//                    view: WebView?,
-//                    request: WebResourceRequest?,
-//                    errorResponse: WebResourceResponse?
-//                ) {
-//                    super.onReceivedHttpError(view, request, errorResponse)
-//                    listener.onError(NetworkError().getError(7))
-//                }
-//
-//                override fun onReceivedError(
-//                    view: WebView?,
-//                    request: WebResourceRequest?,
-//                    error: WebResourceError?
-//                ) {
-//                    super.onReceivedError(view, request, error)
-//                    listener.onError(NetworkError().getError(7))
-//                }
-//            }
-//        }
-//        interstitial.webTemplateUrl?.let {
-//            urlWebView.loadUrl(it)
-//        }
-//
-//        countdownCardView = CardView(activity).apply {
-//            layoutParams = FrameLayout.LayoutParams(
-//                FrameLayout.LayoutParams.WRAP_CONTENT,
-//                ((screenSize[1] * 0.07)).toInt()
-//            ).apply {
-//                topMargin = 24
-//                rightMargin = 24
-//                gravity = Gravity.TOP or Gravity.END
-//            }
-//            setCardBackgroundColor(Color.WHITE)
-//            cardElevation = 6f
-//            radius = 50f
-//
-//            val linear = LinearLayout(activity).apply {
-//                layoutParams = FrameLayout.LayoutParams(
-//                    FrameLayout.LayoutParams.MATCH_PARENT,
-//                    FrameLayout.LayoutParams.MATCH_PARENT
-//                ).apply {
-//                }
-//                gravity = Gravity.CENTER
-//
-//                countdownTextView = TextView(activity).apply {
-//                    layoutParams = FrameLayout.LayoutParams(
-//                        ((screenSize[1] * 0.15)).toInt(),
-//                        FrameLayout.LayoutParams.WRAP_CONTENT
-//                    ).apply {
-//                        maxLines = 1
-//                    }
-//                    gravity = Gravity.CENTER
-//                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
-//                    textSize = UnitUtils.pxToDp(35f, activity.applicationContext)
-//                    setTextColor(Color.BLACK)
-//                }
-//
-//                val closeTextView = TextView(activity).apply {
-//                    layoutParams = FrameLayout.LayoutParams(
-//                        FrameLayout.LayoutParams.WRAP_CONTENT,
-//                        FrameLayout.LayoutParams.WRAP_CONTENT
-//                    ).apply {
-//                        marginEnd = 20
-//                    }
-//                    text = resources.getText(R.string.hamrah_ads_font_close)
-//                    typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.icon)
-//                    setTextColor(Color.BLACK)
-//                    textSize = UnitUtils.pxToDp(60f, activity.applicationContext)
-//                }
-//                addView(countdownTextView)
-//                addView(closeTextView)
-//            }
-//            addView(linear)
-//            setOnClickListener {
-//                if (isBackPressed) {
-//                    listener.onClose()
-//                    destroyAds()
-//                }
-//            }
-//        }
-//    }
 
     private fun initView3(interstitial: NetworkInterstitialAd) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
@@ -849,14 +727,29 @@ class ShowInterstitialAds(
                 startSwingAnimation(installCardView)
             }
 
-//            if (::urlWebView.isInitialized)
-//                container.addView(urlWebView)
-
             if (::countdownCardView.isInitialized)
                 container.addView(countdownCardView)
 
-            allView = (activity.findViewById<View>(android.R.id.content) as ViewGroup)
-            allView.addView(container)
+        }
+        dialog = Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen).apply {
+            window?.apply {
+                setBackgroundDrawable(ColorDrawable(Color.WHITE))
+                addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
+                addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+
+                @Suppress("DEPRECATION")
+                decorView.systemUiVisibility = (
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        )
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    attributes.layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                }
+            }
         }
 
         interstitial.timeToSkip?.let {
@@ -865,6 +758,9 @@ class ShowInterstitialAds(
             countdownCardView.visibility = View.GONE
         }
         interstitial.timeOut?.let { timeToOut(it) }
+
+        dialog.setContentView(container)
+        dialog.show()
 
         ioScope.launch {
             interstitial.trackers?.impression?.let {
@@ -875,21 +771,6 @@ class ShowInterstitialAds(
                 PreferenceDataStoreConstants.HamrahAdsInterstitial
             )
         }
-
-        rootView.isFocusableInTouchMode = true
-        rootView.requestFocus()
-        rootView.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                if (isBackPressed) {
-                    destroyAds()
-                    rootView.setOnKeyListener(null)
-                    return@setOnKeyListener true
-                }
-                return@setOnKeyListener true
-            }
-            false
-        }
-
         listener.onSuccess()
     }
 
@@ -917,6 +798,7 @@ class ShowInterstitialAds(
 
     private fun timeToSkip(seconds: Int) {
         if (seconds == 0) {
+            dialog.setCancelable(true)
             if (::countdownTextView.isInitialized)
                 countdownTextView.text =
                     activity.applicationContext.getString(
@@ -924,6 +806,7 @@ class ShowInterstitialAds(
                     )
             return
         }
+        dialog.setCancelable(false)
         isBackPressed = false
         countDownTimerSkip = object : CountDownTimer(seconds * 1000L, 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -937,6 +820,7 @@ class ShowInterstitialAds(
             }
 
             override fun onFinish() {
+                dialog.setCancelable(true)
                 isBackPressed = true
                 if (::countdownTextView.isInitialized)
                     countdownTextView.text =
@@ -974,8 +858,8 @@ class ShowInterstitialAds(
         if (::countDownTimerSkip.isInitialized)
             countDownTimerSkip.cancel()
 
-        if (::allView.isInitialized && container.parent != null) {
-            allView.removeView(container)
+        if (::dialog.isInitialized && dialog.isShowing) {
+            dialog.dismiss()
         }
         if (::container.isInitialized)
             container.removeAllViews()
