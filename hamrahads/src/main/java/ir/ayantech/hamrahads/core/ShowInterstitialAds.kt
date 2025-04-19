@@ -229,11 +229,10 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -252,16 +251,17 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
+
+        loadContainer(interstitial)
     }
 
     private fun initView2(interstitial: NetworkInterstitialAd) {
@@ -380,11 +380,10 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -403,16 +402,17 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
+
+        loadContainer(interstitial)
     }
 
     private fun initView1(interstitial: NetworkInterstitialAd) {
@@ -532,11 +532,10 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -555,11 +554,10 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -578,16 +576,17 @@ class ShowInterstitialAds(
                             .data(result.asDrawable(Resources.getSystem()))
                             .build()
                     )
-                    loadContainer(interstitial)
                 },
                 onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
+//                    destroyAds()
+//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
+
+        loadContainer(interstitial)
     }
 
     private fun button(interstitial: NetworkInterstitialAd) {
@@ -695,10 +694,10 @@ class ShowInterstitialAds(
     }
 
     private fun loadContainer(interstitial: NetworkInterstitialAd) {
-        if (imageLoaderCount != 0) {
-            imageLoaderCount--
-            return
-        }
+//        if (imageLoaderCount != 0) {
+//            imageLoaderCount--
+//            return
+//        }
 
         mainScope.launch {
             if (::backgroundImageView.isInitialized)
