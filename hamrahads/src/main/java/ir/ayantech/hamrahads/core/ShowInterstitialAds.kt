@@ -11,7 +11,6 @@ import android.os.CountDownTimer
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.FrameLayout
@@ -22,7 +21,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
@@ -36,6 +34,7 @@ import ir.ayantech.hamrahads.network.model.NetworkInterstitialAd
 import ir.ayantech.hamrahads.repository.InterstitialAdsRepository
 import ir.ayantech.hamrahads.utils.BlurTransformation
 import ir.ayantech.hamrahads.utils.handleIntent
+import ir.ayantech.hamrahads.utils.imageLoader
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
@@ -214,8 +213,7 @@ class ShowInterstitialAds(
 
         button(interstitial)
 
-        val imageLoader = ImageLoader.Builder(activity.applicationContext)
-            .build()
+        val imageLoader = imageLoader(activity.applicationContext)
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
@@ -365,8 +363,7 @@ class ShowInterstitialAds(
         }
         button(interstitial)
 
-        val imageLoader = ImageLoader.Builder(activity.applicationContext)
-            .build()
+        val imageLoader = imageLoader(activity.applicationContext)
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
@@ -513,8 +510,8 @@ class ShowInterstitialAds(
 
         button(interstitial)
 
-        val imageLoader = ImageLoader.Builder(activity.applicationContext)
-            .build()
+        val imageLoader = imageLoader(activity.applicationContext)
+
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
             .transformations(

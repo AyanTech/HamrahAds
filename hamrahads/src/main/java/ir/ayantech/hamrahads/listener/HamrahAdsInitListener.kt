@@ -7,5 +7,4 @@ interface HamrahAdsInitListener {
     fun onError(error: NetworkError) {}
     fun onClose() {}
     fun onClick() {}
-//    fun onKeyboardVisibility(viewGroup: ViewGroup, isKeyboardVisible: Boolean) {}
 }

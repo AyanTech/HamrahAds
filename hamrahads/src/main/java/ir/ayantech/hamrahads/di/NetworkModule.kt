@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import ir.ayantech.hamrahads.network.NetworkService
+import ir.ayantech.hamrahads.utils.RetryInterceptor
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -30,11 +31,12 @@ class NetworkModule(private val context: Context) {
             .Builder()
             .addInterceptor(NetworkHeader(context))
             .addInterceptor(loggingInterceptor())
+            .addInterceptor(RetryInterceptor(maxRetries = 3))
             .proxy(Proxy.NO_PROXY)
-            .readTimeout(5, TimeUnit.SECONDS)
-            .callTimeout(5, TimeUnit.SECONDS)
-            .writeTimeout(5, TimeUnit.SECONDS)
-            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .callTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
             .build()
     }
 

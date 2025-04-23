@@ -7,7 +7,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageView
-import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
@@ -19,6 +18,7 @@ import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
+import ir.ayantech.hamrahads.utils.imageLoader
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
@@ -55,10 +55,6 @@ class ShowBannerAds(
     }
 
     private fun showView(banner: NetworkBannerAd) {
-//        var (width, height) = size.getSize()
-
-//        width = UnitUtils.dpToPx(width, activity.applicationContext)
-//        height = UnitUtils.dpToPx(height, activity.applicationContext)
 
         container = FrameLayout(activity)
         val params = FrameLayout.LayoutParams(
@@ -97,9 +93,7 @@ class ShowBannerAds(
             HamrahAdsBannerType.BANNER_1136x640 -> banner.banner1136x640
         }
 
-        val imageLoader = ImageLoader.Builder(activity.applicationContext)
-            .build()
-
+        val imageLoader = imageLoader(activity.applicationContext)
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(bannerImage)
             .target(
@@ -140,10 +134,6 @@ class ShowBannerAds(
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
-
-//        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
-//            listener.onKeyboardVisibility(container, isKeyboardVisible)
-//        }
     }
 
     fun destroyAds() {

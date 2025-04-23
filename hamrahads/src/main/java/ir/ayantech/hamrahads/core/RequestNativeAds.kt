@@ -51,6 +51,6 @@ class RequestNativeAds(
     }
 
     fun cancelRequest() {
-        job?.cancel()
+        job.cancel()
     }
 }

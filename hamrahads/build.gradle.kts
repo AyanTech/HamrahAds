@@ -42,20 +42,15 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.ayantech"
                 artifactId = "HamrahAds"
-                version = "0.1.22"
+                version = "0.1.23"
             }
         }
     }
 }
 
 dependencies {
-
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(platform(libs.okhttp.bom))
     implementation(libs.logging.interceptor)

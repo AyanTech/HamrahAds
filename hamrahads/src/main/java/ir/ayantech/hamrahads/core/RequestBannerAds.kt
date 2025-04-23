@@ -14,7 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 
-class RequestBannerAds constructor(
+class RequestBannerAds(
     private val context: Context,
     private val zoneId: String,
     private val listener: HamrahAdsInitListener

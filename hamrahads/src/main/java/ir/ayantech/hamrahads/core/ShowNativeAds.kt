@@ -19,6 +19,7 @@ import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
+import ir.ayantech.hamrahads.utils.imageLoader
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
@@ -86,6 +87,7 @@ class ShowNativeAds(
                         if (childView is ImageView && !native.logo.isNullOrEmpty()) {
                             val imageLoader = ImageLoader.Builder(activity.applicationContext)
                                 .build()
+
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.logo)
@@ -113,8 +115,7 @@ class ShowNativeAds(
 
                     R.id.hamrah_ad_native_banner -> {
                         if (childView is ImageView && !native.banner1136x640.isNullOrEmpty()) {
-                            val imageLoader = ImageLoader.Builder(activity.applicationContext)
-                                .build()
+                            val imageLoader = imageLoader(activity.applicationContext)
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.banner1136x640)
