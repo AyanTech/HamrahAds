@@ -41,10 +41,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 
 class ShowInterstitialAds(
-    private val activity: AppCompatActivity,
+    private val firstActivity: AppCompatActivity,
     private val listener: HamrahAdsInitListener
 ) {
     private lateinit var container: FrameLayout
@@ -71,26 +72,33 @@ class ShowInterstitialAds(
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val mainScope = CoroutineScope(Dispatchers.Main + job)
+    private val activityRef = WeakReference(firstActivity)
 
     init {
-        val interstitial =
-            PreferenceDataStoreHelper(activity.applicationContext).getPreferenceInterstitial(
-                PreferenceDataStoreConstants.HamrahAdsInterstitial,
-                null
-            )
-        if (interstitial?.interstitialTemplate != null) {
-            resources = activity.applicationContext.resources
-            when (interstitial.interstitialTemplate) {
-                1 -> initView1(interstitial)
-                2 -> initView2(interstitial)
-                3 -> initView3(interstitial)
+        activityRef.get()?.let { activity ->
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                val interstitial =
+                    PreferenceDataStoreHelper(activity.applicationContext).getPreferenceInterstitial(
+                        PreferenceDataStoreConstants.HamrahAdsInterstitial,
+                        null
+                    )
+                if (interstitial?.interstitialTemplate != null) {
+                    resources = activity.applicationContext.resources
+                    when (interstitial.interstitialTemplate) {
+                        1 -> initView1(interstitial, activity)
+                        2 -> initView2(interstitial, activity)
+                        3 -> initView3(interstitial, activity)
+                    }
+                } else {
+                    listener.onError(NetworkError().getError(6))
+                }
             }
-        } else {
+        } ?: run {
             listener.onError(NetworkError().getError(6))
         }
     }
 
-    private fun initView3(interstitial: NetworkInterstitialAd) {
+    private fun initView3(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
             || interstitial.caption.isNullOrEmpty()
@@ -211,7 +219,7 @@ class ShowInterstitialAds(
             gravity = Gravity.CENTER
         }
 
-        button(interstitial)
+        button(interstitial, activity)
 
         val imageLoader = imageLoader(activity.applicationContext)
 
@@ -221,16 +229,18 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(backgroundImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(backgroundImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -243,26 +253,28 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(iconImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(iconImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
 
-        loadContainer(interstitial)
+        loadContainer(interstitial, activity)
     }
 
-    private fun initView2(interstitial: NetworkInterstitialAd) {
+    private fun initView2(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
             || interstitial.caption.isNullOrEmpty()
@@ -361,7 +373,7 @@ class ShowInterstitialAds(
             }
             gravity = Gravity.CENTER
         }
-        button(interstitial)
+        button(interstitial, activity)
 
         val imageLoader = imageLoader(activity.applicationContext)
 
@@ -371,16 +383,18 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(backgroundImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(backgroundImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -393,26 +407,28 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(iconImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(iconImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
 
-        loadContainer(interstitial)
+        loadContainer(interstitial, activity)
     }
 
-    private fun initView1(interstitial: NetworkInterstitialAd) {
+    private fun initView1(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         if (interstitial.interstitialBanner.isNullOrEmpty()
             || interstitial.landingType == null
             || interstitial.caption.isNullOrEmpty()
@@ -508,7 +524,7 @@ class ShowInterstitialAds(
             gravity = Gravity.CENTER
         }
 
-        button(interstitial)
+        button(interstitial, activity)
 
         val imageLoader = imageLoader(activity.applicationContext)
 
@@ -523,16 +539,18 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(backgroundImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(backgroundImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -545,16 +563,18 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(indexImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(indexImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -567,26 +587,28 @@ class ShowInterstitialAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(iconImageView)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(iconImageView)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
+                            )
+                        }
+                    }
                 },
                 onError = { error ->
-//                    destroyAds()
-//                    listener.onError(NetworkError().getError(5))
                 }
             )
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
 
-        loadContainer(interstitial)
+        loadContainer(interstitial, activity)
     }
 
-    private fun button(interstitial: NetworkInterstitialAd) {
+    private fun button(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         installCardView = CardView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._170sdp),
@@ -690,12 +712,7 @@ class ShowInterstitialAds(
         }
     }
 
-    private fun loadContainer(interstitial: NetworkInterstitialAd) {
-//        if (imageLoaderCount != 0) {
-//            imageLoaderCount--
-//            return
-//        }
-
+    private fun loadContainer(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         mainScope.launch {
             if (::backgroundImageView.isInitialized)
                 container.addView(backgroundImageView)
@@ -727,47 +744,53 @@ class ShowInterstitialAds(
                 container.addView(countdownCardView)
 
         }
-        dialog = Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen).apply {
-            window?.apply {
-                setBackgroundDrawable(ColorDrawable(Color.WHITE))
-                addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-                addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
-                addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        if (!activity.isFinishing && !activity.isDestroyed) {
+            dialog =
+                Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen).apply {
+                    window?.apply {
+                        setBackgroundDrawable(ColorDrawable(Color.WHITE))
+                        addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                        addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
+                        addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
-                @Suppress("DEPRECATION")
-                decorView.systemUiVisibility = (
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        )
+                        @Suppress("DEPRECATION")
+                        decorView.systemUiVisibility = (
+                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                )
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    attributes.layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            attributes.layoutInDisplayCutoutMode =
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                        }
+                    }
                 }
+
+            interstitial.timeToSkip?.let {
+                timeToSkip(it, activity)
+            } ?: {
+                countdownCardView.visibility = View.GONE
             }
-        }
+            interstitial.timeOut?.let { timeToOut(it) }
 
-        interstitial.timeToSkip?.let {
-            timeToSkip(it)
-        } ?: {
-            countdownCardView.visibility = View.GONE
-        }
-        interstitial.timeOut?.let { timeToOut(it) }
+            dialog.setContentView(container)
+            dialog.show()
 
-        dialog.setContentView(container)
-        dialog.show()
-
-        ioScope.launch {
-            interstitial.trackers?.impression?.let {
-                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(it)
+            ioScope.launch {
+                interstitial.trackers?.impression?.let {
+                    InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                        it
+                    )
+                }
+                PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
+                    PreferenceDataStoreConstants.HamrahAdsInterstitial
+                )
             }
-
-            PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                PreferenceDataStoreConstants.HamrahAdsInterstitial
-            )
+            listener.onSuccess()
+        } else {
+            listener.onError(NetworkError().getError(6))
         }
-        listener.onSuccess()
     }
 
     private fun startSwingAnimation(view: View) {
@@ -792,7 +815,7 @@ class ShowInterstitialAds(
         animator.start()
     }
 
-    private fun timeToSkip(seconds: Int) {
+    private fun timeToSkip(seconds: Int, activity: AppCompatActivity) {
         if (seconds == 0) {
             dialog.setCancelable(true)
             if (::countdownTextView.isInitialized)

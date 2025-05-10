@@ -25,10 +25,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 
 class ShowBannerAds(
-    private val activity: AppCompatActivity,
+    private val firstActivity: AppCompatActivity,
     private val size: HamrahAdsBannerType,
     private var viewGroup: ViewGroup? = null,
     private val listener: HamrahAdsInitListener
@@ -36,26 +37,33 @@ class ShowBannerAds(
     private lateinit var container: FrameLayout
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
+    private val activityRef = WeakReference(firstActivity)
 
     init {
-        val banner = PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBanner(
-            PreferenceDataStoreConstants.HamrahAdsBanner,
-            null
-        )
-        if (banner?.landingType != null
-            && !banner.landingLink.isNullOrEmpty()
-            && !banner.trackers?.click.isNullOrEmpty()
-            && !banner.trackers?.impression.isNullOrEmpty()
-            && hasBannerImage(size, banner)
-        ) {
-            showView(banner)
-        } else {
+        activityRef.get()?.let { activity ->
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                val banner =
+                    PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBanner(
+                        PreferenceDataStoreConstants.HamrahAdsBanner,
+                        null
+                    )
+                if (banner?.landingType != null
+                    && !banner.landingLink.isNullOrEmpty()
+                    && !banner.trackers?.click.isNullOrEmpty()
+                    && !banner.trackers?.impression.isNullOrEmpty()
+                    && hasBannerImage(size, banner)
+                ) {
+                    showView(banner, activity)
+                } else {
+                    listener.onError(NetworkError().getError(6))
+                }
+            }
+        } ?: run {
             listener.onError(NetworkError().getError(6))
         }
     }
 
-    private fun showView(banner: NetworkBannerAd) {
-
+    private fun showView(banner: NetworkBannerAd, activity: AppCompatActivity) {
         container = FrameLayout(activity)
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -100,31 +108,39 @@ class ShowBannerAds(
                 onStart = { placeholder ->
                 },
                 onSuccess = { result ->
-                    imageLoader.enqueue(
-                        ImageRequest.Builder(activity.applicationContext)
-                            .target(adImage)
-                            .data(result.asDrawable(Resources.getSystem()))
-                            .build()
-                    )
-
-                    if (viewGroup != null) {
-                        viewGroup?.addView(container)
-                    } else {
-                        activity.addContentView(container, params)
-                    }
-                    container.addView(adImage)
-
-                    ioScope.launch {
-                        banner.trackers?.impression?.let {
-                            BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
-                                it
+                    activityRef.get()?.let { currentActivity ->
+                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                            imageLoader.enqueue(
+                                ImageRequest.Builder(currentActivity.applicationContext)
+                                    .target(adImage)
+                                    .data(result.asDrawable(Resources.getSystem()))
+                                    .build()
                             )
+
+                            if (viewGroup != null) {
+                                viewGroup?.addView(container)
+                            } else {
+                                currentActivity.addContentView(container, params)
+                            }
+                            container.addView(adImage)
+
+                            ioScope.launch {
+                                banner.trackers?.impression?.let {
+                                    BannerAdsRepository(NetworkModule(currentActivity.applicationContext)).impression(
+                                        it
+                                    )
+                                }
+                                PreferenceDataStoreHelper(currentActivity.applicationContext).removePreferenceCoroutine(
+                                    PreferenceDataStoreConstants.HamrahAdsBanner
+                                )
+                            }
+                            listener.onSuccess()
+                        } else {
+                            listener.onError(NetworkError().getError(6))
                         }
-                        PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                            PreferenceDataStoreConstants.HamrahAdsBanner
-                        )
+                    } ?: run {
+                        listener.onError(NetworkError().getError(6))
                     }
-                    listener.onSuccess()
                 },
                 onError = { error ->
                     destroyAds()
@@ -134,11 +150,11 @@ class ShowBannerAds(
             .memoryCachePolicy(CachePolicy.DISABLED)
             .diskCachePolicy(CachePolicy.DISABLED)
             .build())
+
     }
 
     fun destroyAds() {
         job.cancel()
-
         if (::container.isInitialized)
             container.removeAllViews()
     }

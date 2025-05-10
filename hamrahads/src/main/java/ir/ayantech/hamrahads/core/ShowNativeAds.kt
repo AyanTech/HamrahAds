@@ -26,40 +26,53 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 
 class ShowNativeAds(
-    private val activity: AppCompatActivity,
+    private val firstActivity: AppCompatActivity,
     private val viewGroup: ViewGroup,
     private val listener: HamrahAdsInitListener
 ) {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
+    private val activityRef = WeakReference(firstActivity)
 
     init {
-        val native = PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNative(
-            PreferenceDataStoreConstants.HamrahAdsNative,
-            null
-        )
-        if (native?.landingType != null
-            && !native.cta.isNullOrEmpty()
-            && !native.caption.isNullOrEmpty()
-            && !native.landingLink.isNullOrEmpty()
-            && !native.trackers?.click.isNullOrEmpty()
-            && !native.trackers?.impression.isNullOrEmpty()
-        ) {
-            showView(viewGroup, native)
-            setTrackers(native)
-        } else {
+        activityRef.get()?.let { activity ->
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                val native =
+                    PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNative(
+                        PreferenceDataStoreConstants.HamrahAdsNative,
+                        null
+                    )
+                if (native?.landingType != null
+                    && !native.cta.isNullOrEmpty()
+                    && !native.caption.isNullOrEmpty()
+                    && !native.landingLink.isNullOrEmpty()
+                    && !native.trackers?.click.isNullOrEmpty()
+                    && !native.trackers?.impression.isNullOrEmpty()
+                ) {
+                    showView(viewGroup, native, activity)
+                    setTrackers(native, activity)
+                } else {
+                    listener.onError(NetworkError().getError(6))
+                }
+            }
+        } ?: run {
             listener.onError(NetworkError().getError(6))
         }
     }
 
-    private fun showView(viewGroup: ViewGroup, native: NetworkNativeAd) {
+    private fun showView(
+        viewGroup: ViewGroup,
+        native: NetworkNativeAd,
+        activity: AppCompatActivity
+    ) {
         for (i in 0 until viewGroup.childCount) {
             val childView = viewGroup.getChildAt(i)
             if (childView is ViewGroup) {
-                showView(childView, native)
+                showView(childView, native, activity)
             } else {
                 when (childView.id) {
                     R.id.hamrah_ad_native_title -> {
@@ -78,7 +91,7 @@ class ShowNativeAds(
                         if (childView is Button) {
                             childView.text = native.cta
                             childView.setOnClickListener {
-                                onClickView(native)
+                                onClickView(native, activity)
                             }
                         }
                     }
@@ -95,12 +108,16 @@ class ShowNativeAds(
                                         onStart = { placeholder ->
                                         },
                                         onSuccess = { result ->
-                                            imageLoader.enqueue(
-                                                ImageRequest.Builder(activity.applicationContext)
-                                                    .target(childView)
-                                                    .data(result.asDrawable(Resources.getSystem()))
-                                                    .build()
-                                            )
+                                            activityRef.get()?.let { currentActivity ->
+                                                if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                                    imageLoader.enqueue(
+                                                        ImageRequest.Builder(currentActivity.applicationContext)
+                                                            .target(childView)
+                                                            .data(result.asDrawable(Resources.getSystem()))
+                                                            .build()
+                                                    )
+                                                }
+                                            }
                                         },
                                         onError = { error ->
                                             listener.onError(NetworkError().getError(5))
@@ -123,12 +140,16 @@ class ShowNativeAds(
                                         onStart = { placeholder ->
                                         },
                                         onSuccess = { result ->
-                                            imageLoader.enqueue(
-                                                ImageRequest.Builder(activity.applicationContext)
-                                                    .target(childView)
-                                                    .data(result.asDrawable(Resources.getSystem()))
-                                                    .build()
-                                            )
+                                            activityRef.get()?.let { currentActivity ->
+                                                if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                                    imageLoader.enqueue(
+                                                        ImageRequest.Builder(currentActivity.applicationContext)
+                                                            .target(childView)
+                                                            .data(result.asDrawable(Resources.getSystem()))
+                                                            .build()
+                                                    )
+                                                }
+                                            }
                                         },
                                         onError = { error ->
                                             listener.onError(NetworkError().getError(5))
@@ -144,19 +165,16 @@ class ShowNativeAds(
                     R.id.hamrah_ad_native_cta_view -> {
                         if (childView is View) {
                             childView.setOnClickListener {
-                                onClickView(native)
+                                onClickView(native, activity)
                             }
                         }
                     }
                 }
             }
         }
-//        setKeyboardVisibilityListener(activity) { isKeyboardVisible ->
-//            listener.onKeyboardVisibility(viewGroup, isKeyboardVisible)
-//        }
     }
 
-    private fun setTrackers(native: NetworkNativeAd) {
+    private fun setTrackers(native: NetworkNativeAd, activity: AppCompatActivity) {
         ioScope.launch {
             native.trackers?.impression?.let {
                 NativeAdsRepository(NetworkModule(activity.applicationContext))
@@ -169,7 +187,7 @@ class ShowNativeAds(
         listener.onSuccess()
     }
 
-    private fun onClickView(native: NetworkNativeAd) {
+    private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
         listener.onClick()
         ioScope.launch {
             native.trackers?.click?.let {
