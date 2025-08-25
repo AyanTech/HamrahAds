@@ -33,7 +33,8 @@ class HamrahAds {
         fun build(): ir.ayantech.hamrahads.core.Initializer? {
             return if (::context.isInitialized &&
                 ::hamrahAdsId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized
+                ::hamrahAdsInitListener.isInitialized &&
+                hamrahAdsId.isNotBlank()
             ) {
                 Initializer(context, hamrahAdsId, hamrahAdsInitListener)
             } else {
@@ -62,7 +63,8 @@ class HamrahAds {
         fun build(): ir.ayantech.hamrahads.core.RequestBannerAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized
+                ::hamrahAdsInitListener.isInitialized &&
+                zoneId.isNotBlank()
             ) {
                 return RequestBannerAds(context, zoneId, hamrahAdsInitListener)
             } else {
@@ -125,7 +127,8 @@ class HamrahAds {
         fun build(): ir.ayantech.hamrahads.core.RequestInterstitialAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized
+                ::hamrahAdsInitListener.isInitialized &&
+                zoneId.isNotBlank()
             ) {
                 return ir.ayantech.hamrahads.core.RequestInterstitialAds(
                     context,
@@ -181,7 +184,8 @@ class HamrahAds {
         fun build(): ir.ayantech.hamrahads.core.RequestNativeAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized
+                ::hamrahAdsInitListener.isInitialized &&
+                zoneId.isNotBlank()
             ) {
                 return ir.ayantech.hamrahads.core.RequestNativeAds(
                     context,
