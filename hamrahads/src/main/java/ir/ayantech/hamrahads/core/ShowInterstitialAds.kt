@@ -225,6 +225,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .target(
                 onStart = { placeholder ->
                 },
@@ -249,6 +264,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.logo)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .target(
                 onStart = { placeholder ->
                 },
@@ -379,6 +409,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .target(
                 onStart = { placeholder ->
                 },
@@ -403,6 +448,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.logo)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .target(
                 onStart = { placeholder ->
                 },
@@ -530,6 +590,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .transformations(
                 listOf(
                     BlurTransformation(radius = 25, scale = 0.5f)
@@ -559,6 +634,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.interstitialBanner)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .target(
                 onStart = { placeholder ->
                 },
@@ -583,6 +673,21 @@ class ShowInterstitialAds(
 
         imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
             .data(interstitial.logo)
+            .listener(
+                onError = { request, result ->
+                    destroyAds()
+                    if (!result.throwable.message.isNullOrBlank()) {
+                        listener.onError(
+                            NetworkError(
+                                description = "Failed to load image: ${result.throwable.message}",
+                                code = "G00015"
+                            )
+                        )
+                    } else {
+                        listener.onError(NetworkError().getError(5))
+                    }
+                }
+            )
             .target(
                 onStart = { placeholder ->
                 },

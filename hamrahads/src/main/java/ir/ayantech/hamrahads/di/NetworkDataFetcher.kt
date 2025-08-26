@@ -28,7 +28,11 @@ class NetworkDataFetcher {
                 }
             }
         } catch (e: Exception) {
-            NetworkResult.Error(NetworkError().getError(4))
+            if (!e.message.isNullOrBlank()) {
+                NetworkResult.Error(NetworkError(description = e.message, code = "G00014"))
+            } else {
+                NetworkResult.Error(NetworkError().getError(4))
+            }
         }
     }
 }

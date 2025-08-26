@@ -104,6 +104,21 @@ class ShowNativeAds(
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.logo)
+                                    .listener(
+                                        onError = { request, result ->
+                                            destroyAds()
+                                            if (!result.throwable.message.isNullOrBlank()) {
+                                                listener.onError(
+                                                    NetworkError(
+                                                        description = "Failed to load image: ${result.throwable.message}",
+                                                        code = "G00015"
+                                                    )
+                                                )
+                                            } else {
+                                                listener.onError(NetworkError().getError(5))
+                                            }
+                                        }
+                                    )
                                     .target(
                                         onStart = { placeholder ->
                                         },
@@ -136,6 +151,21 @@ class ShowNativeAds(
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.banner1136x640)
+                                    .listener(
+                                        onError = { request, result ->
+                                            destroyAds()
+                                            if (!result.throwable.message.isNullOrBlank()) {
+                                                listener.onError(
+                                                    NetworkError(
+                                                        description = "Failed to load image: ${result.throwable.message}",
+                                                        code = "G00015"
+                                                    )
+                                                )
+                                            } else {
+                                                listener.onError(NetworkError().getError(5))
+                                            }
+                                        }
+                                    )
                                     .target(
                                         onStart = { placeholder ->
                                         },

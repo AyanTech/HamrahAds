@@ -34,7 +34,7 @@ class Initializer(
                 PreferenceDataStoreConstants.HamrahInitializer,
                 ""
             )
-            if (cachedInitKey.isEmpty() || cachedInitKey != hamrahAdsId) {
+            if (cachedInitKey.isBlank() || cachedInitKey != hamrahAdsId) {
                 when (val result =
                     InitializerRepository(NetworkModule(context)).fetchProfileInfo(hamrahAdsId)) {
                     is NetworkResult.Success -> {

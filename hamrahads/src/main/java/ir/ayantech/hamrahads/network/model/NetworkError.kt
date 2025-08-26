@@ -9,9 +9,10 @@ private val errorCodes = listOf(
   /*2*/  NetworkError("G00012", "Error body is null"),
   /*3*/  NetworkError("G00013", "Failed to deserialize error response"),
   /*4*/  NetworkError("G00014", "Network request failed"),
-  /*5*/  NetworkError("G00015", "The desired advertisement photo has not been downloaded correctly"),
+  /*5*/  NetworkError("G00015", "The ad image has not been downloaded"),
   /*6*/  NetworkError("G00017", "There is no advertising information"),
   /*7*/  NetworkError("G00018", "The web display encountered a problem"),
+  /*8*/  NetworkError("G00019", "AppKey is empty"),
 )
 
 @Serializable

@@ -17,7 +17,7 @@ class NetworkHeader(private val context: Context) : Interceptor {
             PreferenceDataStoreConstants.HamrahInitializer,
             ""
         )
-        if (appKey.isNotEmpty()) {
+        if (appKey.isNotBlank()) {
             ongoing.addHeader("X-App-Key", appKey)
         }
         return chain.proceed(ongoing.build())

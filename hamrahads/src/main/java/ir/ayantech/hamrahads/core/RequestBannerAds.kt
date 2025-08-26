@@ -5,6 +5,7 @@ import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkDeviceInfo
+import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -26,6 +27,16 @@ class RequestBannerAds(
     init {
         NetworkDeviceInfo().fetchNetworkDeviceInfo(context) {
             ioScope.launch {
+                val appKey = PreferenceDataStoreHelper(context).getPreference(
+                    PreferenceDataStoreConstants.HamrahInitializer,
+                    ""
+                )
+                if (appKey.isBlank()) {
+                    mainScope.launch {
+                        listener.onError(NetworkError().getError(8))
+                    }
+                    return@launch
+                }
                 when (val result =
                     BannerAdsRepository(NetworkModule(context)).fetchBannerAds(zoneId, it)) {
                     is NetworkResult.Success -> {
