@@ -20,7 +20,6 @@ import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
-import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,8 +29,9 @@ import java.lang.ref.WeakReference
 
 
 class ShowNativeAds(
-    private val firstActivity: AppCompatActivity,
+    firstActivity: AppCompatActivity,
     private val viewGroup: ViewGroup,
+    private val zoneId: String,
     private val listener: HamrahAdsInitListener
 ) {
     private val job = SupervisorJob()
@@ -39,28 +39,29 @@ class ShowNativeAds(
     private val activityRef = WeakReference(firstActivity)
 
     init {
-        activityRef.get()?.let { activity ->
-            if (!activity.isFinishing && !activity.isDestroyed) {
-                val native =
-                    PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNative(
-                        PreferenceDataStoreConstants.HamrahAdsNative,
-                        null
-                    )
-                if (native?.landingType != null
-                    && !native.cta.isNullOrEmpty()
-                    && !native.caption.isNullOrEmpty()
-                    && !native.landingLink.isNullOrEmpty()
-                    && !native.trackers?.click.isNullOrEmpty()
-                    && !native.trackers?.impression.isNullOrEmpty()
-                ) {
-                    showView(viewGroup, native, activity)
-                    setTrackers(native, activity)
-                } else {
-                    listener.onError(NetworkError().getError(6))
+        if (zoneId.isNotBlank()) {
+            activityRef.get()?.let { activity ->
+                if (!activity.isFinishing && !activity.isDestroyed) {
+                    val native =
+                        PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNative(
+                            zoneId,
+                        )
+                    if (native != null) {
+                        if (native.landingType != null
+                            && !native.cta.isNullOrEmpty()
+                            && !native.caption.isNullOrEmpty()
+                            && !native.landingLink.isNullOrEmpty()
+                            && !native.trackers?.click.isNullOrEmpty()
+                            && !native.trackers?.impression.isNullOrEmpty()
+                        ) {
+                            showView(viewGroup, native, activity)
+                            setTrackers(native, activity)
+                        } else {
+                            listener.onError(NetworkError().getError(6))
+                        }
+                    }
                 }
             }
-        } ?: run {
-            listener.onError(NetworkError().getError(6))
         }
     }
 
@@ -120,8 +121,6 @@ class ShowNativeAds(
                                         }
                                     )
                                     .target(
-                                        onStart = { placeholder ->
-                                        },
                                         onSuccess = { result ->
                                             activityRef.get()?.let { currentActivity ->
                                                 if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
@@ -134,9 +133,6 @@ class ShowNativeAds(
                                                 }
                                             }
                                         },
-                                        onError = { error ->
-                                            listener.onError(NetworkError().getError(5))
-                                        }
                                     )
                                     .memoryCachePolicy(CachePolicy.DISABLED)
                                     .diskCachePolicy(CachePolicy.DISABLED)
@@ -167,8 +163,6 @@ class ShowNativeAds(
                                         }
                                     )
                                     .target(
-                                        onStart = { placeholder ->
-                                        },
                                         onSuccess = { result ->
                                             activityRef.get()?.let { currentActivity ->
                                                 if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
@@ -180,9 +174,6 @@ class ShowNativeAds(
                                                     )
                                                 }
                                             }
-                                        },
-                                        onError = { error ->
-                                            listener.onError(NetworkError().getError(5))
                                         }
                                     )
                                     .memoryCachePolicy(CachePolicy.DISABLED)
@@ -211,7 +202,7 @@ class ShowNativeAds(
                     .impression(it)
             }
             PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                PreferenceDataStoreConstants.HamrahAdsNative
+                zoneId
             )
         }
         listener.onSuccess()

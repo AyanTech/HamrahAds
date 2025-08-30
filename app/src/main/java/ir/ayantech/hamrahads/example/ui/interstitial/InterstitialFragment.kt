@@ -54,6 +54,7 @@ class InterstitialFragment : Fragment() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestInterstitialAds"
                     showInterstitialAds = HamrahAds.ShowInterstitialAds()
+                        .initId("094afc16-54fa-4738-b893-01fdf01ff330")
                         .setContext(requireActivity() as AppCompatActivity)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {

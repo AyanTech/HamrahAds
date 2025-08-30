@@ -35,7 +35,6 @@ import ir.ayantech.hamrahads.repository.InterstitialAdsRepository
 import ir.ayantech.hamrahads.utils.BlurTransformation
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
-import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +44,8 @@ import java.lang.ref.WeakReference
 
 
 class ShowInterstitialAds(
-    private val firstActivity: AppCompatActivity,
+    firstActivity: AppCompatActivity,
+    private val zoneId: String,
     private val listener: HamrahAdsInitListener
 ) {
     private lateinit var container: FrameLayout
@@ -75,26 +75,27 @@ class ShowInterstitialAds(
     private val activityRef = WeakReference(firstActivity)
 
     init {
-        activityRef.get()?.let { activity ->
-            if (!activity.isFinishing && !activity.isDestroyed) {
-                val interstitial =
-                    PreferenceDataStoreHelper(activity.applicationContext).getPreferenceInterstitial(
-                        PreferenceDataStoreConstants.HamrahAdsInterstitial,
-                        null
-                    )
-                if (interstitial?.interstitialTemplate != null) {
-                    resources = activity.applicationContext.resources
-                    when (interstitial.interstitialTemplate) {
-                        1 -> initView1(interstitial, activity)
-                        2 -> initView2(interstitial, activity)
-                        3 -> initView3(interstitial, activity)
+        if (zoneId.isNotBlank()) {
+            activityRef.get()?.let { activity ->
+                if (!activity.isFinishing && !activity.isDestroyed) {
+                    val interstitial =
+                        PreferenceDataStoreHelper(activity.applicationContext).getPreferenceInterstitial(
+                            zoneId
+                        )
+                    if (interstitial != null) {
+                        if (interstitial.interstitialTemplate != null) {
+                            resources = activity.applicationContext.resources
+                            when (interstitial.interstitialTemplate) {
+                                1 -> initView1(interstitial, activity)
+                                2 -> initView2(interstitial, activity)
+                                3 -> initView3(interstitial, activity)
+                            }
+                        } else {
+                            listener.onError(NetworkError().getError(6))
+                        }
                     }
-                } else {
-                    listener.onError(NetworkError().getError(6))
                 }
             }
-        } ?: run {
-            listener.onError(NetworkError().getError(6))
         }
     }
 
@@ -223,83 +224,78 @@ class ShowInterstitialAds(
 
         val imageLoader = imageLoader(activity.applicationContext)
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.interstitialBanner)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.interstitialBanner)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
-                    }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(backgroundImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                        } else {
+                            listener.onError(NetworkError().getError(5))
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(backgroundImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
+                        }
+                    },
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build()
+        )
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.logo)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.logo)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
-                    }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(iconImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                        } else {
+                            listener.onError(NetworkError().getError(5))
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(iconImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
+                        }
+                    }
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build())
 
         loadContainer(interstitial, activity)
     }
@@ -407,83 +403,78 @@ class ShowInterstitialAds(
 
         val imageLoader = imageLoader(activity.applicationContext)
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.interstitialBanner)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.interstitialBanner)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
-                    }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(backgroundImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                        } else {
+                            listener.onError(NetworkError().getError(5))
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(backgroundImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
+                        }
+                    },
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build()
+        )
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.logo)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.logo)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
-                    }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(iconImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                        } else {
+                            listener.onError(NetworkError().getError(5))
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(iconImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
+                        }
+                    }
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build())
 
         loadContainer(interstitial, activity)
     }
@@ -588,127 +579,118 @@ class ShowInterstitialAds(
 
         val imageLoader = imageLoader(activity.applicationContext)
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.interstitialBanner)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.interstitialBanner)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
+                        } else {
+                            listener.onError(NetworkError().getError(5))
+                        }
                     }
-                }
-            )
-            .transformations(
-                listOf(
-                    BlurTransformation(radius = 25, scale = 0.5f)
                 )
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(backgroundImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                .transformations(
+                    listOf(
+                        BlurTransformation(radius = 25, scale = 0.5f)
+                    )
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(backgroundImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build())
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.interstitialBanner)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.interstitialBanner)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
-                    }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(indexImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                        } else {
+                            listener.onError(NetworkError().getError(5))
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(indexImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
+                        }
+                    }
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build())
 
-        imageLoader.enqueue(ImageRequest.Builder(activity.applicationContext)
-            .data(interstitial.logo)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+        imageLoader.enqueue(
+            ImageRequest.Builder(activity.applicationContext)
+                .data(interstitial.logo)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
-                    }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(iconImageView)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                        } else {
+                            listener.onError(NetworkError().getError(5))
                         }
                     }
-                },
-                onError = { error ->
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(iconImageView)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
+                            }
+                        }
+                    }
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build())
 
         loadContainer(interstitial, activity)
     }
@@ -889,12 +871,10 @@ class ShowInterstitialAds(
                     )
                 }
                 PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                    PreferenceDataStoreConstants.HamrahAdsInterstitial
+                    zoneId
                 )
             }
             listener.onSuccess()
-        } else {
-            listener.onError(NetworkError().getError(6))
         }
     }
 

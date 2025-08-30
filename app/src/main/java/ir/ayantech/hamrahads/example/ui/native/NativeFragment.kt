@@ -55,6 +55,7 @@ class NativeFragment : Fragment() {
 
                     showNativeAds = HamrahAds.ShowNativeAds()
                         .setContext(requireActivity() as AppCompatActivity)
+                        .initId("d3f8b412-e4a9-4373-861f-4836dab21939")
                         .setViewGroup(binding.nativeView)
                         .initListener(object : HamrahAdsInitListener {
                             override fun onSuccess() {

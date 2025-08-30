@@ -5,7 +5,6 @@ import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
 import ir.ayantech.hamrahads.network.model.NetworkDeviceInfo
-import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
@@ -23,7 +22,6 @@ class RequestNativeAds(
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val mainScope = CoroutineScope(Dispatchers.Main + job)
 
-
     init {
         NetworkDeviceInfo().fetchNetworkDeviceInfo(context) {
             ioScope.launch {
@@ -31,10 +29,7 @@ class RequestNativeAds(
                     PreferenceDataStoreConstants.HamrahInitializer,
                     ""
                 )
-                if (appKey.isBlank()) {
-                    mainScope.launch {
-                        listener.onError(NetworkError().getError(8))
-                    }
+                if (appKey.isBlank() || zoneId.isBlank()) {
                     return@launch
                 }
                 when (val result =
@@ -42,7 +37,7 @@ class RequestNativeAds(
                     is NetworkResult.Success -> {
                         val data = result.data
                         PreferenceDataStoreHelper(context).putPreferenceNative(
-                            PreferenceDataStoreConstants.HamrahAdsNative,
+                            zoneId,
                             data
                         )
                         mainScope.launch {

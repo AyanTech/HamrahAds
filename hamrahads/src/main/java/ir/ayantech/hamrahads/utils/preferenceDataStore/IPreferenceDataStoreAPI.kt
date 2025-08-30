@@ -7,34 +7,31 @@ import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 
 interface IPreferenceDataStoreAPI {
 
-    suspend fun putPreferenceBanner(key: Preferences.Key<String>, value: NetworkBannerAd)
-    suspend fun putPreferenceNative(key: Preferences.Key<String>, value: NetworkNativeAd)
-    suspend fun putPreferenceInterstitial(
-        key: Preferences.Key<String>,
-        value: NetworkInterstitialAd
-    )
+    suspend fun putPreferenceBanner(key: String, value: NetworkBannerAd)
+
+    suspend fun putPreferenceNative(key: String, value: NetworkNativeAd)
+
+    suspend fun putPreferenceInterstitial(key: String, value: NetworkInterstitialAd)
 
     fun getPreferenceBanner(
-        key: Preferences.Key<String>,
-        defaultValue: String?
+        key: String,
     ): NetworkBannerAd?
 
     fun getPreferenceNative(
-        key: Preferences.Key<String>,
-        defaultValue: String?
+        key: String,
     ): NetworkNativeAd?
 
     fun getPreferenceInterstitial(
-        key: Preferences.Key<String>,
-        defaultValue: String?
+        key: String,
     ): NetworkInterstitialAd?
 
     fun <T> getPreference(key: Preferences.Key<T>, defaultValue: T): T
+
     fun <T> putPreference(key: Preferences.Key<T>, value: T)
 
     suspend fun <T> getPreferenceCoroutine(key: Preferences.Key<T>, defaultValue: T): T
     suspend fun <T> putPreferenceCoroutine(key: Preferences.Key<T>, value: T)
     fun <T> removePreference(key: Preferences.Key<T>)
-    suspend fun <T> removePreferenceCoroutine(key: Preferences.Key<T>)
-    suspend fun <T> clearAllPreference()
+    suspend fun removePreferenceCoroutine(key: String)
+    suspend fun clearAllPreference()
 }

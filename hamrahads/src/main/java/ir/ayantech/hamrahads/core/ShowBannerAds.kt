@@ -19,7 +19,6 @@ import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
-import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,8 +28,9 @@ import java.lang.ref.WeakReference
 
 
 class ShowBannerAds(
-    private val firstActivity: AppCompatActivity,
+    firstActivity: AppCompatActivity,
     private val size: HamrahAdsBannerType,
+    private val zoneId: String,
     private var viewGroup: ViewGroup? = null,
     private val listener: HamrahAdsInitListener
 ) {
@@ -40,26 +40,27 @@ class ShowBannerAds(
     private val activityRef = WeakReference(firstActivity)
 
     init {
-        activityRef.get()?.let { activity ->
-            if (!activity.isFinishing && !activity.isDestroyed) {
-                val banner =
-                    PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBanner(
-                        PreferenceDataStoreConstants.HamrahAdsBanner,
-                        null
-                    )
-                if (banner?.landingType != null
-                    && !banner.landingLink.isNullOrEmpty()
-                    && !banner.trackers?.click.isNullOrEmpty()
-                    && !banner.trackers?.impression.isNullOrEmpty()
-                    && hasBannerImage(size, banner)
-                ) {
-                    showView(banner, activity)
-                } else {
-                    listener.onError(NetworkError().getError(6))
+        if (zoneId.isNotBlank()) {
+            activityRef.get()?.let { activity ->
+                if (!activity.isFinishing && !activity.isDestroyed) {
+                    val banner =
+                        PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBanner(
+                            zoneId
+                        )
+                    if (banner != null) {
+                        if (banner.landingType != null
+                            && !banner.landingLink.isNullOrEmpty()
+                            && !banner.trackers?.click.isNullOrEmpty()
+                            && !banner.trackers?.impression.isNullOrEmpty()
+                            && hasBannerImage(size, banner)
+                        ) {
+                            showView(banner, activity)
+                        } else {
+                            listener.onError(NetworkError().getError(6))
+                        }
+                    }
                 }
             }
-        } ?: run {
-            listener.onError(NetworkError().getError(6))
         }
     }
 
@@ -104,68 +105,59 @@ class ShowBannerAds(
         val imageLoader = imageLoader(activity.applicationContext)
         imageLoader.enqueue(
             ImageRequest.Builder(activity.applicationContext)
-            .data(bannerImage)
-            .listener(
-                onError = { request, result ->
-                    destroyAds()
-                    if (!result.throwable.message.isNullOrBlank()) {
-                        listener.onError(
-                            NetworkError(
-                                description = "Failed to load image: ${result.throwable.message}",
-                                code = "G00015"
+                .data(bannerImage)
+                .listener(
+                    onError = { request, result ->
+                        destroyAds()
+                        if (!result.throwable.message.isNullOrBlank()) {
+                            listener.onError(
+                                NetworkError(
+                                    description = "Failed to load image: ${result.throwable.message}",
+                                    code = "G00015"
+                                )
                             )
-                        )
-                    } else {
-                        listener.onError(NetworkError().getError(5))
+                        } else {
+                            listener.onError(NetworkError().getError(5))
+                        }
                     }
-                }
-            )
-            .target(
-                onStart = { placeholder ->
-                },
-                onSuccess = { result ->
-                    activityRef.get()?.let { currentActivity ->
-                        if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
-                            imageLoader.enqueue(
-                                ImageRequest.Builder(currentActivity.applicationContext)
-                                    .target(adImage)
-                                    .data(result.asDrawable(Resources.getSystem()))
-                                    .build()
-                            )
+                )
+                .target(
+                    onSuccess = { result ->
+                        activityRef.get()?.let { currentActivity ->
+                            if (!currentActivity.isFinishing && !currentActivity.isDestroyed) {
+                                imageLoader.enqueue(
+                                    ImageRequest.Builder(currentActivity.applicationContext)
+                                        .target(adImage)
+                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .build()
+                                )
 
-                            if (viewGroup != null) {
-                                viewGroup?.addView(container)
-                            } else {
-                                currentActivity.addContentView(container, params)
-                            }
-                            container.addView(adImage)
+                                if (viewGroup != null) {
+                                    viewGroup?.addView(container)
+                                } else {
+                                    currentActivity.addContentView(container, params)
+                                }
+                                container.addView(adImage)
 
-                            ioScope.launch {
-                                banner.trackers?.impression?.let {
-                                    BannerAdsRepository(NetworkModule(currentActivity.applicationContext)).impression(
-                                        it
+                                ioScope.launch {
+                                    banner.trackers?.impression?.let {
+                                        BannerAdsRepository(NetworkModule(currentActivity.applicationContext)).impression(
+                                            it
+                                        )
+                                    }
+                                    PreferenceDataStoreHelper(currentActivity.applicationContext).removePreferenceCoroutine(
+                                        zoneId
                                     )
                                 }
-                                PreferenceDataStoreHelper(currentActivity.applicationContext).removePreferenceCoroutine(
-                                    PreferenceDataStoreConstants.HamrahAdsBanner
-                                )
+                                listener.onSuccess()
                             }
-                            listener.onSuccess()
-                        } else {
-                            listener.onError(NetworkError().getError(6))
                         }
-                    } ?: run {
-                        listener.onError(NetworkError().getError(6))
-                    }
-                },
-                onError = { error ->
-                    destroyAds()
-                    listener.onError(NetworkError().getError(5))
-                }
-            )
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .build())
+                    },
+                )
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
+                .build()
+        )
 
     }
 

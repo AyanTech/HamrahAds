@@ -3,6 +3,7 @@ package ir.ayantech.hamrahads.utils.preferenceDataStore
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkInterstitialAd
@@ -56,8 +57,9 @@ class PreferenceDataStoreHelper(
         }
     }
 
-    override suspend fun <T> removePreferenceCoroutine(key: Preferences.Key<T> ) {
+    override suspend fun removePreferenceCoroutine(keyName: String) {
         dataSource.edit { preferences ->
+            val key = stringPreferencesKey(keyName)
             preferences.remove(key)
         }
     }
@@ -70,71 +72,82 @@ class PreferenceDataStoreHelper(
         }.await()
     }
 
-    override suspend fun <T> clearAllPreference() {
+    override suspend fun clearAllPreference() {
         dataSource.edit { preferences ->
             preferences.clear()
         }
     }
 
     override suspend fun putPreferenceBanner(
-        key: Preferences.Key<String>,
+        keyName: String,
         value: NetworkBannerAd
     ) {
         dataSource.edit { preferences ->
+            val key = stringPreferencesKey(keyName)
             preferences[key] = json.encodeToString(NetworkBannerAd.serializer(), value)
         }
     }
 
     override suspend fun putPreferenceNative(
-        key: Preferences.Key<String>,
+        keyName: String,
         value: NetworkNativeAd
     ) {
         dataSource.edit { preferences ->
+            val key = stringPreferencesKey(keyName)
             preferences[key] = json.encodeToString(NetworkNativeAd.serializer(), value)
         }
     }
 
     override suspend fun putPreferenceInterstitial(
-        key: Preferences.Key<String>,
+        keyName: String,
         value: NetworkInterstitialAd
     ) {
         dataSource.edit { preferences ->
+            val key = stringPreferencesKey(keyName)
             preferences[key] = json.encodeToString(NetworkInterstitialAd.serializer(), value)
         }
     }
 
     override fun getPreferenceBanner(
-        key: Preferences.Key<String>,
-        defaultValue: String?
+        keyName: String,
     ): NetworkBannerAd? = runBlocking {
         async {
-            val text = dataSource.data.first()[key] ?: defaultValue
-            text?.let {
-                json.decodeFromString<NetworkBannerAd>(it)
+            val key = stringPreferencesKey(keyName)
+            val text = dataSource.data.first()[key]
+
+            try {
+                text?.let { json.decodeFromString<NetworkBannerAd>(it) }
+            } catch (e: Exception) {
+                null
             }
+
         }.await()
     }
 
     override fun getPreferenceNative(
-        key: Preferences.Key<String>,
-        defaultValue: String?
+        keyName: String,
     ): NetworkNativeAd? = runBlocking {
         async {
-            val text = dataSource.data.first()[key] ?: defaultValue
-            text?.let {
-                json.decodeFromString<NetworkNativeAd>(text)
+            val key = stringPreferencesKey(keyName)
+            val text = dataSource.data.first()[key]
+            try {
+                text?.let { json.decodeFromString<NetworkNativeAd>(it) }
+            } catch (e: Exception) {
+                null
             }
         }.await()
     }
 
     override fun getPreferenceInterstitial(
-        key: Preferences.Key<String>,
-        defaultValue: String?
+        keyName: String,
     ): NetworkInterstitialAd? = runBlocking {
         async {
-            val text = dataSource.data.first()[key] ?: defaultValue
-            text?.let {
-                json.decodeFromString<NetworkInterstitialAd>(text)
+            val key = stringPreferencesKey(keyName)
+            val text = dataSource.data.first()[key]
+            try {
+                text?.let { json.decodeFromString<NetworkInterstitialAd>(text) }
+            } catch (e: Exception) {
+                null
             }
         }.await()
     }
