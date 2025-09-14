@@ -13,12 +13,12 @@ fun imageLoader(context: Context): ImageLoader {
             OkHttpNetworkFetcherFactory(
                 callFactory = {
                     OkHttpClient.Builder()
-                        .addInterceptor(RetryInterceptor(maxRetries = 3))
+                        .addInterceptor(RetryInterceptor())
                         .proxy(Proxy.NO_PROXY)
-                        .readTimeout(10, TimeUnit.SECONDS)
-                        .callTimeout(10, TimeUnit.SECONDS)
-                        .writeTimeout(10, TimeUnit.SECONDS)
-                        .connectTimeout(10, TimeUnit.SECONDS)
+                        .connectTimeout(5, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .writeTimeout(15, TimeUnit.SECONDS)
+                        .callTimeout(30, TimeUnit.SECONDS)
                         .build()
                 }
             )

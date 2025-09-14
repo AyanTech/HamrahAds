@@ -33,18 +33,16 @@ class RequestInterstitialAds(
                     return@launch
                 }
                 when (val result =
-                    InterstitialAdsRepository(NetworkModule(context)).fetchInterstitialAds(
-                        zoneId,
-                        it
-                    )) {
+                    InterstitialAdsRepository(NetworkModule(context)).fetchInterstitialAds(zoneId, it)) {
                     is NetworkResult.Success -> {
-                        val data = result.data
-                        PreferenceDataStoreHelper(context).putPreferenceInterstitial(
-                            zoneId,
-                            data
-                        )
-                        mainScope.launch {
-                            listener.onSuccess()
+                        result.data.let { data ->
+                            PreferenceDataStoreHelper(context).putPreferenceInterstitial(
+                                zoneId,
+                                data
+                            )
+                            mainScope.launch {
+                                listener.onSuccess()
+                            }
                         }
                     }
 

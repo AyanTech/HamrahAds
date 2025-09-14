@@ -30,13 +30,13 @@ class NetworkModule(private val context: Context) {
         return OkHttpClient
             .Builder()
             .addInterceptor(NetworkHeader(context))
+            .addInterceptor(RetryInterceptor())
             .addInterceptor(loggingInterceptor())
-            .addInterceptor(RetryInterceptor(maxRetries = 3))
             .proxy(Proxy.NO_PROXY)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .callTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .connectTimeout(10, TimeUnit.SECONDS)
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .callTimeout(30, TimeUnit.SECONDS)
             .build()
     }
 

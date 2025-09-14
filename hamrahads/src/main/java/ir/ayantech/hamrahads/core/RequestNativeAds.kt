@@ -35,13 +35,14 @@ class RequestNativeAds(
                 when (val result =
                     NativeAdsRepository(NetworkModule(context)).fetchNativeAds(zoneId, it)) {
                     is NetworkResult.Success -> {
-                        val data = result.data
-                        PreferenceDataStoreHelper(context).putPreferenceNative(
-                            zoneId,
-                            data
-                        )
-                        mainScope.launch {
-                            listener.onSuccess()
+                        result.data.let { data ->
+                            PreferenceDataStoreHelper(context).putPreferenceNative(
+                                zoneId,
+                                data
+                            )
+                            mainScope.launch {
+                                listener.onSuccess()
+                            }
                         }
                     }
 

@@ -24,6 +24,7 @@ import java.security.MessageDigest
 import java.util.Calendar
 import java.util.TimeZone
 
+@OptIn(kotlinx.serialization.InternalSerializationApi::class)
 @Serializable
 data class NetworkDeviceInfo(
 

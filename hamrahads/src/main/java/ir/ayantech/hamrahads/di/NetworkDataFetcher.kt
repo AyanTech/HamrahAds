@@ -17,8 +17,7 @@ class NetworkDataFetcher {
                     ?: return NetworkResult.Error(NetworkError().getError(2))
                 try {
                     NetworkResult.Error(Json.decodeFromString<NetworkError>(errorBody))
-                } catch (e: Exception) {
-//                    NetworkResult.Error(NetworkError().getError(3))
+                } catch (_: Exception) {
                     NetworkResult.Error(
                         NetworkError(
                             code = "G00013",

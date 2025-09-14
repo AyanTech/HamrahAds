@@ -79,57 +79,53 @@ class PreferenceDataStoreHelper(
     }
 
     override suspend fun putPreferenceBanner(
-        keyName: String,
+        key: String,
         value: NetworkBannerAd
     ) {
         dataSource.edit { preferences ->
-            val key = stringPreferencesKey(keyName)
-            preferences[key] = json.encodeToString(NetworkBannerAd.serializer(), value)
+            preferences[stringPreferencesKey(key)] =
+                json.encodeToString(NetworkBannerAd.serializer(), value)
         }
     }
 
     override suspend fun putPreferenceNative(
-        keyName: String,
+        key: String,
         value: NetworkNativeAd
     ) {
         dataSource.edit { preferences ->
-            val key = stringPreferencesKey(keyName)
-            preferences[key] = json.encodeToString(NetworkNativeAd.serializer(), value)
+            preferences[stringPreferencesKey(key)] =
+                json.encodeToString(NetworkNativeAd.serializer(), value)
         }
     }
 
     override suspend fun putPreferenceInterstitial(
-        keyName: String,
+        key: String,
         value: NetworkInterstitialAd
     ) {
         dataSource.edit { preferences ->
-            val key = stringPreferencesKey(keyName)
-            preferences[key] = json.encodeToString(NetworkInterstitialAd.serializer(), value)
+            preferences[stringPreferencesKey(key)] =
+                json.encodeToString(NetworkInterstitialAd.serializer(), value)
         }
     }
 
     override fun getPreferenceBanner(
-        keyName: String,
+        key: String,
     ): NetworkBannerAd? = runBlocking {
         async {
-            val key = stringPreferencesKey(keyName)
-            val text = dataSource.data.first()[key]
-
+            val text = dataSource.data.first()[stringPreferencesKey(key)]
             try {
                 text?.let { json.decodeFromString<NetworkBannerAd>(it) }
             } catch (e: Exception) {
                 null
             }
-
         }.await()
     }
 
     override fun getPreferenceNative(
-        keyName: String,
+        key: String,
     ): NetworkNativeAd? = runBlocking {
         async {
-            val key = stringPreferencesKey(keyName)
-            val text = dataSource.data.first()[key]
+            val text = dataSource.data.first()[stringPreferencesKey(key)]
             try {
                 text?.let { json.decodeFromString<NetworkNativeAd>(it) }
             } catch (e: Exception) {
@@ -139,11 +135,10 @@ class PreferenceDataStoreHelper(
     }
 
     override fun getPreferenceInterstitial(
-        keyName: String,
+        key: String,
     ): NetworkInterstitialAd? = runBlocking {
         async {
-            val key = stringPreferencesKey(keyName)
-            val text = dataSource.data.first()[key]
+            val text = dataSource.data.first()[stringPreferencesKey(key)]
             try {
                 text?.let { json.decodeFromString<NetworkInterstitialAd>(text) }
             } catch (e: Exception) {

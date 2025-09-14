@@ -14,7 +14,7 @@ private val errorCodes = listOf(
   /*7*/  NetworkError("G00018", "The web display encountered a problem"),
   /*8*/  NetworkError("G00019", "AppKey is empty"),
 )
-
+@OptIn(kotlinx.serialization.InternalSerializationApi::class)
 @Serializable
 data class NetworkError(
 

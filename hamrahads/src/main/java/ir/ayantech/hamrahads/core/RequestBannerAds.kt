@@ -36,13 +36,14 @@ class RequestBannerAds(
                 when (val result =
                     BannerAdsRepository(NetworkModule(context)).fetchBannerAds(zoneId, it)) {
                     is NetworkResult.Success -> {
-                        val data = result.data
-                        PreferenceDataStoreHelper(context).putPreferenceBanner(
-                            zoneId,
-                            data
-                        )
-                        mainScope.launch {
-                            listener.onSuccess()
+                        result.data.let { data ->
+                            PreferenceDataStoreHelper(context).putPreferenceBanner(
+                                zoneId,
+                                data
+                            )
+                            mainScope.launch {
+                                listener.onSuccess()
+                            }
                         }
                     }
 
