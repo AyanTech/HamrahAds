@@ -23,6 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
+
 rootProject.name = "HamrahAds"
 include(":app")
 include(":hamrahads")

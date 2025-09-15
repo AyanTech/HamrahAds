@@ -37,24 +37,25 @@ android {
             withJavadocJar()
         }
     }
+    kotlinOptions {
+        jvmTarget = "21"
+    }
     lint {
         abortOnError = false
     }
 }
-publishing {
-    publications {
-        create<MavenPublication>("release") {
-            afterEvaluate {
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
                 from(components["release"])
+                groupId = "com.github.AyanTech"
+                artifactId = "hamrahads"
+                version = "0.1.33"
             }
-            groupId = "com.github.AyanTech"
-            artifactId = "hamrahads"
-            version = "0.1.32"
         }
     }
 }
-
-
 
 dependencies {
     implementation(libs.androidx.appcompat)
