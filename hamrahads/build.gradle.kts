@@ -31,24 +31,30 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-    tasks.whenTaskAdded {
-        if (name == "lintVitalAnalyzeRelease") {
-            enabled = false
-        }
-    }
-}
-afterEvaluate {
     publishing {
-        publications {
-            create<MavenPublication>("release") {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+    lint {
+        abortOnError = false
+    }
+}
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            afterEvaluate {
                 from(components["release"])
-                groupId = "com.github.ayantech"
-                artifactId = "HamrahAds"
-                version = "0.1.31"
             }
+            groupId = "com.github.AyanTech"
+            artifactId = "hamrahads"
+            version = "0.1.32"
         }
     }
 }
+
+
 
 dependencies {
     implementation(libs.androidx.appcompat)
