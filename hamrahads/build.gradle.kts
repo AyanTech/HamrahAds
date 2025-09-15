@@ -28,20 +28,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "21"
-    }
-    lint {
-        abortOnError = false
+        jvmTarget = "17"
     }
 }
 afterEvaluate {
@@ -49,13 +40,14 @@ afterEvaluate {
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])
-                groupId = "com.github.AyanTech"
-                artifactId = "hamrahads"
-                version = "0.1.33"
+                groupId = "com.github.ayantech"
+                artifactId = "HamrahAds"
+                version = "0.1.34"
             }
         }
     }
 }
+
 
 dependencies {
     implementation(libs.androidx.appcompat)
