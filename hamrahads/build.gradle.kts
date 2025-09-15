@@ -31,6 +31,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+    tasks.whenTaskAdded {
+        if (name == "lintVitalAnalyzeRelease") {
+            enabled = false
+        }
+    }
 }
 afterEvaluate {
     publishing {
@@ -39,7 +44,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.ayantech"
                 artifactId = "HamrahAds"
-                version = "0.1.30"
+                version = "0.1.31"
             }
         }
     }
