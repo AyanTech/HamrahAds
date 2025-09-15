@@ -1,6 +1,7 @@
 package ir.ayantech.hamrahads.core
 
 import android.content.res.Resources
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -55,7 +56,8 @@ class ShowNativeAds(
                             && !native.trackers?.impression.isNullOrEmpty()
                         ) {
                             showView(viewGroup, native, activity)
-                            setTrackers(native, activity)
+                            listener.onSuccess()
+                            trackImpressionOnce(viewGroup, native, activity)
                         } else {
                             listener.onError(NetworkError().getError(6))
                         }
@@ -195,19 +197,46 @@ class ShowNativeAds(
         }
     }
 
-    private fun setTrackers(native: NetworkNativeAd, activity: AppCompatActivity) {
-        ioScope.launch {
-            native.trackers?.impression?.let {
-                NativeAdsRepository(NetworkModule(activity.applicationContext))
-                    .impression(it)
-            }
-            PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                zoneId
-            )
-        }
-        listener.onSuccess()
-    }
+    private fun trackImpressionOnce(view: View, native: NetworkNativeAd, activity: AppCompatActivity) {
+        var tracked = false
 
+        fun tryTrack() {
+            if (!tracked && view.isShown) {
+                val rect = android.graphics.Rect()
+                val visible = view.getGlobalVisibleRect(rect)
+                if (visible && rect.width() > 0 && rect.height() > 0) {
+                    tracked = true
+                    ioScope.launch {
+                        native.trackers?.impression?.let {
+                            NativeAdsRepository(NetworkModule(activity.applicationContext))
+                                .impression(it)
+                        }
+                        PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
+                            zoneId
+                        )
+                    }
+                }
+            }
+        }
+
+        view.viewTreeObserver.addOnGlobalLayoutListener(object :
+            android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                tryTrack()
+                if (tracked) {
+                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                }
+            }
+        })
+
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                tryTrack()
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {}
+        })
+    }
     private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
         listener.onClick()
         ioScope.launch {

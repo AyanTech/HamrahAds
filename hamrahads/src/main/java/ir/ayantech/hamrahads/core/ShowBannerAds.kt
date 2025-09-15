@@ -1,8 +1,12 @@
 package ir.ayantech.hamrahads.core
 
 import android.content.res.Resources
+import android.graphics.Rect
+import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -25,7 +29,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-
 
 class ShowBannerAds(
     firstActivity: AppCompatActivity,
@@ -138,17 +141,7 @@ class ShowBannerAds(
                                     currentActivity.addContentView(container, params)
                                 }
                                 container.addView(adImage)
-
-                                ioScope.launch {
-                                    banner.trackers?.impression?.let {
-                                        BannerAdsRepository(NetworkModule(currentActivity.applicationContext)).impression(
-                                            it
-                                        )
-                                    }
-                                    PreferenceDataStoreHelper(currentActivity.applicationContext).removePreferenceCoroutine(
-                                        zoneId
-                                    )
-                                }
+                                trackImpressionOnce(adImage, banner, currentActivity)
                                 listener.onSuccess()
                             }
                         }
@@ -159,6 +152,44 @@ class ShowBannerAds(
                 .build()
         )
 
+    }
+
+    private fun trackImpressionOnce(view: View, banner: NetworkBannerAd, activity: AppCompatActivity) {
+        var tracked = false
+        fun tryTrack() {
+            if (!tracked && view.isShown) {
+                val rect = Rect()
+                val visible = view.getGlobalVisibleRect(rect)
+                if (visible && rect.height() > 0 && rect.width() > 0) {
+                    tracked = true
+                    ioScope.launch {
+                        banner.trackers?.impression?.let {
+                            BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(it)
+                        }
+                        PreferenceDataStoreHelper(activity.applicationContext)
+                            .removePreferenceCoroutine(zoneId)
+                    }
+                }
+            }
+        }
+
+        view.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                tryTrack()
+                if (tracked) {
+                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                }
+            }
+        })
+
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                tryTrack()
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {}
+        })
     }
 
     fun destroyAds() {
