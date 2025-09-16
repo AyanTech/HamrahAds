@@ -1,9 +1,6 @@
 package ir.ayantech.hamrahads.example
 
 import android.os.Bundle
-import android.util.Log
-import android.view.KeyEvent
-import android.view.Window
 import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -12,7 +9,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import ir.ayantech.hamrahads.HamrahAds
 import ir.ayantech.hamrahads.example.databinding.ActivityMainBinding
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 
 @Keep
@@ -35,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         HamrahAds.Initializer()
             .setContext(applicationContext)
             .initId("8765224ae941c1ad721d35777f90eec4160c2193f726d566df46dbab8aa0008e")
-            .initListener(object : HamrahAdsInitListener {
+            .initListener(object : InitListener {
                 override fun onSuccess() {
 
                 }

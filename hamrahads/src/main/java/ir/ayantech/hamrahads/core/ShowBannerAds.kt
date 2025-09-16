@@ -2,7 +2,6 @@ package ir.ayantech.hamrahads.core
 
 import android.content.res.Resources
 import android.graphics.Rect
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -16,8 +15,9 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.target
 import ir.ayantech.hamrahads.di.NetworkModule
+import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
@@ -35,7 +35,7 @@ class ShowBannerAds(
     private val size: HamrahAdsBannerType,
     private val zoneId: String,
     private var viewGroup: ViewGroup? = null,
-    private val listener: HamrahAdsInitListener
+    private val listener: ShowListener
 ) {
     private lateinit var container: FrameLayout
     private val job = SupervisorJob()
@@ -89,13 +89,7 @@ class ShowBannerAds(
             scaleType = ImageView.ScaleType.FIT_XY
             adjustViewBounds = true
             setOnClickListener {
-                listener.onClick()
-                ioScope.launch {
-                    banner.trackers?.click?.let {
-                        BannerAdsRepository(NetworkModule(activity.applicationContext)).click(it)
-                    }
-                }
-                handleIntent(activity, banner.landingType, banner.landingLink)
+                onClickView(banner, activity)
             }
         }
 
@@ -141,8 +135,8 @@ class ShowBannerAds(
                                     currentActivity.addContentView(container, params)
                                 }
                                 container.addView(adImage)
+                                listener.onLoaded()
                                 trackImpressionOnce(adImage, banner, currentActivity)
-                                listener.onSuccess()
                             }
                         }
                     },
@@ -151,10 +145,32 @@ class ShowBannerAds(
                 .diskCachePolicy(CachePolicy.DISABLED)
                 .build()
         )
-
     }
 
-    private fun trackImpressionOnce(view: View, banner: NetworkBannerAd, activity: AppCompatActivity) {
+    private fun onClickView(banner: NetworkBannerAd, activity: AppCompatActivity) {
+        ioScope.launch {
+            banner.trackers?.click?.let {
+                when (val result =
+                    BannerAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
+                    is NetworkResult.Success -> {
+                        result.data.let { data ->
+                            listener.onClick()
+                        }
+                    }
+
+                    is NetworkResult.Error -> {
+                    }
+                }
+            }
+        }
+        handleIntent(activity, banner.landingType, banner.landingLink)
+    }
+
+    private fun trackImpressionOnce(
+        view: View,
+        banner: NetworkBannerAd,
+        activity: AppCompatActivity
+    ) {
         var tracked = false
         fun tryTrack() {
             if (!tracked && view.isShown) {
@@ -164,7 +180,19 @@ class ShowBannerAds(
                     tracked = true
                     ioScope.launch {
                         banner.trackers?.impression?.let {
-                            BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(it)
+                            when (val result =
+                                BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                                    it
+                                )) {
+                                is NetworkResult.Success -> {
+                                    result.data.let { data ->
+                                        listener.onDisplayed()
+                                    }
+                                }
+
+                                is NetworkResult.Error -> {
+                                }
+                            }
                         }
                         PreferenceDataStoreHelper(activity.applicationContext)
                             .removePreferenceCoroutine(zoneId)

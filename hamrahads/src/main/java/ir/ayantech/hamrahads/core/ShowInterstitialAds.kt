@@ -28,10 +28,13 @@ import coil3.request.target
 import coil3.request.transformations
 import ir.ayantech.hamrahads.R
 import ir.ayantech.hamrahads.di.NetworkModule
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.di.NetworkResult
+import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkInterstitialAd
+import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.InterstitialAdsRepository
+import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.BlurTransformation
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
@@ -46,7 +49,7 @@ import java.lang.ref.WeakReference
 class ShowInterstitialAds(
     firstActivity: AppCompatActivity,
     private val zoneId: String,
-    private val listener: HamrahAdsInitListener
+    private val listener: ShowListener
 ) {
     private lateinit var container: FrameLayout
     private lateinit var countdownCardView: CardView
@@ -718,19 +721,7 @@ class ShowInterstitialAds(
                     typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
                     text = interstitial.cta
                     setOnClickListener {
-                        listener.onClick()
-                        ioScope.launch {
-                            interstitial.trackers?.click?.let {
-                                InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
-                                    it
-                                )
-                            }
-                        }
-                        handleIntent(
-                            activity,
-                            interstitial.landingType,
-                            interstitial.landingLink
-                        )
+                        onClickView(interstitial, activity)
                     }
                 }
                 gravity = Gravity.CENTER
@@ -798,7 +789,28 @@ class ShowInterstitialAds(
             }
         }
     }
+    private fun onClickView(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
+        ioScope.launch {
+            interstitial.trackers?.click?.let {
+                when (val result =
+                    InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
+                    is NetworkResult.Success -> {
+                        result.data.let { data ->
+                            listener.onClick()
+                        }
+                    }
+                    is NetworkResult.Error -> {
 
+                    }
+                }
+            }
+        }
+        handleIntent(
+            activity,
+            interstitial.landingType,
+            interstitial.landingLink
+        )
+    }
     private fun loadContainer(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         mainScope.launch {
             if (::backgroundImageView.isInitialized)
@@ -863,18 +875,28 @@ class ShowInterstitialAds(
 
             dialog.setContentView(container)
             dialog.show()
+            listener.onLoaded()
 
             ioScope.launch {
                 interstitial.trackers?.impression?.let {
-                    InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(
-                        it
-                    )
+                    when (val result =
+                        InterstitialAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                            it
+                        )) {
+                        is NetworkResult.Success -> {
+                            result.data.let { data ->
+                                listener.onDisplayed()
+                            }
+                        }
+
+                        is NetworkResult.Error -> {
+
+                        }
+                    }
                 }
-                PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                    zoneId
-                )
+                PreferenceDataStoreHelper(activity.applicationContext)
+                    .removePreferenceCoroutine(zoneId)
             }
-            listener.onSuccess()
         }
     }
 

@@ -2,9 +2,7 @@ package ir.ayantech.hamrahads.listener
 
 import ir.ayantech.hamrahads.network.model.NetworkError
 
-interface HamrahAdsInitListener {
+interface InitListener {
     fun onSuccess() {}
     fun onError(error: NetworkError) {}
-    fun onClose() {}
-    fun onClick() {}
 }

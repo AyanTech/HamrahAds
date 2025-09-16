@@ -1,7 +1,6 @@
 package ir.ayantech.hamrahads.core
 
 import android.content.res.Resources
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -15,9 +14,11 @@ import coil3.request.ImageRequest
 import coil3.request.target
 import ir.ayantech.hamrahads.R
 import ir.ayantech.hamrahads.di.NetworkModule
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.di.NetworkResult
+import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
+import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
@@ -33,7 +34,7 @@ class ShowNativeAds(
     firstActivity: AppCompatActivity,
     private val viewGroup: ViewGroup,
     private val zoneId: String,
-    private val listener: HamrahAdsInitListener
+    private val listener: ShowListener
 ) {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
@@ -56,7 +57,7 @@ class ShowNativeAds(
                             && !native.trackers?.impression.isNullOrEmpty()
                         ) {
                             showView(viewGroup, native, activity)
-                            listener.onSuccess()
+                            listener.onLoaded()
                             trackImpressionOnce(viewGroup, native, activity)
                         } else {
                             listener.onError(NetworkError().getError(6))
@@ -197,7 +198,11 @@ class ShowNativeAds(
         }
     }
 
-    private fun trackImpressionOnce(view: View, native: NetworkNativeAd, activity: AppCompatActivity) {
+    private fun trackImpressionOnce(
+        view: View,
+        native: NetworkNativeAd,
+        activity: AppCompatActivity
+    ) {
         var tracked = false
 
         fun tryTrack() {
@@ -208,12 +213,21 @@ class ShowNativeAds(
                     tracked = true
                     ioScope.launch {
                         native.trackers?.impression?.let {
-                            NativeAdsRepository(NetworkModule(activity.applicationContext))
-                                .impression(it)
+                            when (val result =
+                                NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                                    it
+                                )) {
+                                is NetworkResult.Success -> {
+                                    result.data.let { data ->
+                                        listener.onDisplayed()
+                                    }
+                                }
+                                is NetworkResult.Error -> {
+                                }
+                            }
+                            PreferenceDataStoreHelper(activity.applicationContext)
+                                .removePreferenceCoroutine(zoneId)
                         }
-                        PreferenceDataStoreHelper(activity.applicationContext).removePreferenceCoroutine(
-                            zoneId
-                        )
                     }
                 }
             }
@@ -237,13 +251,20 @@ class ShowNativeAds(
             override fun onViewDetachedFromWindow(v: View) {}
         })
     }
+
     private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
-        listener.onClick()
         ioScope.launch {
             native.trackers?.click?.let {
-                NativeAdsRepository(NetworkModule(activity.applicationContext)).click(
-                    it
-                )
+                when (val result =
+                    NativeAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
+                    is NetworkResult.Success -> {
+                        result.data.let { data ->
+                            listener.onClick()
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                    }
+                }
             }
         }
         handleIntent(

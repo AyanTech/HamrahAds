@@ -3,7 +3,7 @@ package ir.ayantech.hamrahads.core
 import android.content.Context
 import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.repository.InitializerRepository
 import ir.ayantech.hamrahads.utils.LocationTracker
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 class Initializer(
     private val context: Context,
     private val hamrahAdsId: String,
-    private val listener: HamrahAdsInitListener
+    private val listener: InitListener
 ) {
     init {
         LocationTracker(context).startTrackingLocation { latitude, longitude ->

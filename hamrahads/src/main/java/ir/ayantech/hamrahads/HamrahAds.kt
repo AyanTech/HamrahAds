@@ -6,14 +6,16 @@ import androidx.appcompat.app.AppCompatActivity
 import ir.ayantech.hamrahads.core.Initializer
 import ir.ayantech.hamrahads.core.RequestBannerAds
 import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.listener.InitListener
+import ir.ayantech.hamrahads.listener.RequestListener
+import ir.ayantech.hamrahads.listener.ShowListener
 
 class HamrahAds {
 
     class Initializer {
         private lateinit var context: Context
         private lateinit var hamrahAdsId: String
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var listener: InitListener
 
         fun setContext(context: Context) = apply {
             this.context = context
@@ -23,17 +25,17 @@ class HamrahAds {
             this.hamrahAdsId = hamrahAdsId
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(listener: InitListener) = apply {
+            this.listener = listener
         }
 
         fun build(): ir.ayantech.hamrahads.core.Initializer? {
             return if (::context.isInitialized &&
                 ::hamrahAdsId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::listener.isInitialized &&
                 hamrahAdsId.isNotBlank()
             ) {
-                Initializer(context, hamrahAdsId, hamrahAdsInitListener)
+                Initializer(context, hamrahAdsId, listener)
             } else {
                 null
             }
@@ -43,7 +45,7 @@ class HamrahAds {
     class RequestBannerAds {
         private lateinit var context: Context
         private lateinit var zoneId: String
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var requestListener: RequestListener
 
         fun setContext(context: Context) = apply {
             this.context = context
@@ -53,17 +55,17 @@ class HamrahAds {
             this.zoneId = zoneId
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(requestListener: RequestListener) = apply {
+            this.requestListener = requestListener
         }
 
         fun build(): ir.ayantech.hamrahads.core.RequestBannerAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return RequestBannerAds(context, zoneId, hamrahAdsInitListener)
+                return RequestBannerAds(context, zoneId, requestListener)
             } else {
                 null
             }
@@ -75,7 +77,7 @@ class HamrahAds {
         private lateinit var size: HamrahAdsBannerType
         private lateinit var zoneId: String
         private var viewGroup: ViewGroup? = null
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var showListener: ShowListener
 
         fun setContext(activity: AppCompatActivity) = apply {
             this.activity = activity
@@ -93,13 +95,13 @@ class HamrahAds {
             this.viewGroup = viewGroup
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(showListener: ShowListener) = apply {
+            this.showListener = showListener
         }
 
         fun build(): ir.ayantech.hamrahads.core.ShowBannerAds? {
             return if (::activity.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::showListener.isInitialized &&
                 ::size.isInitialized &&
                 zoneId.isNotBlank()
             ) {
@@ -108,7 +110,7 @@ class HamrahAds {
                     size,
                     zoneId,
                     viewGroup,
-                    hamrahAdsInitListener
+                    showListener
                 )
             } else {
                 null
@@ -119,7 +121,7 @@ class HamrahAds {
     class RequestInterstitialAds {
         private lateinit var context: Context
         private lateinit var zoneId: String
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var requestListener: RequestListener
 
         fun setContext(context: Context) = apply {
             this.context = context
@@ -129,20 +131,20 @@ class HamrahAds {
             this.zoneId = zoneId
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(requestListener: RequestListener) = apply {
+            this.requestListener = requestListener
         }
 
         fun build(): ir.ayantech.hamrahads.core.RequestInterstitialAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
                 return ir.ayantech.hamrahads.core.RequestInterstitialAds(
                     context,
                     zoneId,
-                    hamrahAdsInitListener
+                    requestListener
                 )
             } else {
                 null
@@ -153,7 +155,7 @@ class HamrahAds {
     class ShowInterstitialAds {
         private lateinit var activity: AppCompatActivity
         private lateinit var zoneId: String
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var showListener: ShowListener
 
         fun setContext(activity: AppCompatActivity) = apply {
             this.activity = activity
@@ -163,19 +165,19 @@ class HamrahAds {
             this.zoneId = zoneId
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(showListener: ShowListener) = apply {
+            this.showListener = showListener
         }
 
         fun build(): ir.ayantech.hamrahads.core.ShowInterstitialAds? {
             return if (::activity.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::showListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
                 return ir.ayantech.hamrahads.core.ShowInterstitialAds(
                     activity,
                     zoneId,
-                    hamrahAdsInitListener
+                    showListener
                 )
             } else {
                 null
@@ -186,7 +188,7 @@ class HamrahAds {
     class RequestNativeAds {
         private lateinit var context: Context
         private lateinit var zoneId: String
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var requestListener: RequestListener
 
         fun setContext(context: Context) = apply {
             this.context = context
@@ -196,20 +198,20 @@ class HamrahAds {
             this.zoneId = zoneId
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(requestListener: RequestListener) = apply {
+            this.requestListener = requestListener
         }
 
         fun build(): ir.ayantech.hamrahads.core.RequestNativeAds? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
                 return ir.ayantech.hamrahads.core.RequestNativeAds(
                     context,
                     zoneId,
-                    hamrahAdsInitListener
+                    requestListener
                 )
             } else {
                 null
@@ -221,7 +223,7 @@ class HamrahAds {
         private lateinit var activity: AppCompatActivity
         private lateinit var zoneId: String
         private lateinit var viewGroup: ViewGroup
-        private lateinit var hamrahAdsInitListener: HamrahAdsInitListener
+        private lateinit var showListener: ShowListener
 
         fun setContext(activity: AppCompatActivity) = apply {
             this.activity = activity
@@ -235,13 +237,13 @@ class HamrahAds {
             this.zoneId = zoneId
         }
 
-        fun initListener(hamrahAdsInitListener: HamrahAdsInitListener) = apply {
-            this.hamrahAdsInitListener = hamrahAdsInitListener
+        fun initListener(showListener: ShowListener) = apply {
+            this.showListener = showListener
         }
 
         fun build(): ir.ayantech.hamrahads.core.ShowNativeAds? {
             return if (::activity.isInitialized &&
-                ::hamrahAdsInitListener.isInitialized &&
+                ::showListener.isInitialized &&
                 ::viewGroup.isInitialized &&
                 zoneId.isNotBlank()
             ) {
@@ -249,7 +251,7 @@ class HamrahAds {
                     activity,
                     viewGroup,
                     zoneId,
-                    hamrahAdsInitListener
+                    showListener
                 )
             } else {
                 null

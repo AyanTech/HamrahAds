@@ -3,7 +3,7 @@ package ir.ayantech.hamrahads.core
 import android.content.Context
 import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
-import ir.ayantech.hamrahads.listener.HamrahAdsInitListener
+import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.network.model.NetworkDeviceInfo
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 class RequestBannerAds(
     private val context: Context,
     private val zoneId: String,
-    private val listener: HamrahAdsInitListener
+    private val listener: RequestListener
 ) {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
@@ -33,8 +33,7 @@ class RequestBannerAds(
                 if (appKey.isBlank() || zoneId.isBlank()) {
                     return@launch
                 }
-                when (val result =
-                    BannerAdsRepository(NetworkModule(context)).fetchBannerAds(zoneId, it)) {
+                when (val result = BannerAdsRepository(NetworkModule(context)).fetchBannerAds(zoneId, it)) {
                     is NetworkResult.Success -> {
                         result.data.let { data ->
                             PreferenceDataStoreHelper(context).putPreferenceBanner(
