@@ -20,7 +20,6 @@ import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
-import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
@@ -220,7 +219,7 @@ class ShowNativeAds(
                 tracked = true
                 ioScope.launch {
                     native.trackers?.impression?.let {
-                        when (BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(it)) {
+                        when (NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(it)) {
                             is NetworkResult.Success -> listener.onDisplayed()
                             is NetworkResult.Error -> {}
                         }
@@ -270,60 +269,6 @@ class ShowNativeAds(
             }, true
         )
     }
-
-//    private fun trackImpressionOnce(
-//        view: View,
-//        native: NetworkNativeAd,
-//        activity: AppCompatActivity
-//    ) {
-//        var tracked = false
-//
-//        fun tryTrack() {
-//            if (!tracked && view.isShown) {
-//                val rect = android.graphics.Rect()
-//                val visible = view.getGlobalVisibleRect(rect)
-//                if (visible && rect.width() > 0 && rect.height() > 0) {
-//                    tracked = true
-//                    ioScope.launch {
-//                        native.trackers?.impression?.let {
-//                            when (val result =
-//                                NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(
-//                                    it
-//                                )) {
-//                                is NetworkResult.Success -> {
-//                                    result.data.let { data ->
-//                                        listener.onDisplayed()
-//                                    }
-//                                }
-//                                is NetworkResult.Error -> {
-//                                }
-//                            }
-//                            PreferenceDataStoreHelper(activity.applicationContext)
-//                                .removePreferenceCoroutine(zoneId)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        view.viewTreeObserver.addOnGlobalLayoutListener(object :
-//            android.view.ViewTreeObserver.OnGlobalLayoutListener {
-//            override fun onGlobalLayout() {
-//                tryTrack()
-//                if (tracked) {
-//                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
-//                }
-//            }
-//        })
-//
-//        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-//            override fun onViewAttachedToWindow(v: View) {
-//                tryTrack()
-//            }
-//
-//            override fun onViewDetachedFromWindow(v: View) {}
-//        })
-//    }
 
     private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
         ioScope.launch {

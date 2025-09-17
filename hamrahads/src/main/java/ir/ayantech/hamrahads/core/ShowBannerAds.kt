@@ -166,37 +166,34 @@ class ShowBannerAds(
         handleIntent(activity, banner.landingType, banner.landingLink)
     }
 
+    private fun isViewVisibleEnough(view: View): Boolean {
+        if (!view.isShown || view.alpha <= 0f) return false
+        val rect = Rect()
+        val visible = view.getGlobalVisibleRect(rect)
+        return visible &&
+                rect.height() >= view.height / 2 &&
+                rect.width() >= view.width / 2
+    }
+
     private fun trackImpressionOnce(
         view: View,
         banner: NetworkBannerAd,
         activity: AppCompatActivity
     ) {
         var tracked = false
-        fun tryTrack() {
-            if (!tracked && view.isShown) {
-                val rect = Rect()
-                val visible = view.getGlobalVisibleRect(rect)
-                if (visible && rect.height() > 0 && rect.width() > 0) {
-                    tracked = true
-                    ioScope.launch {
-                        banner.trackers?.impression?.let {
-                            when (val result =
-                                BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
-                                    it
-                                )) {
-                                is NetworkResult.Success -> {
-                                    result.data.let { data ->
-                                        listener.onDisplayed()
-                                    }
-                                }
 
-                                is NetworkResult.Error -> {
-                                }
-                            }
+        fun tryTrack() {
+            if (!tracked && isViewVisibleEnough(view)) {
+                tracked = true
+                ioScope.launch {
+                    banner.trackers?.impression?.let {
+                        when (BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(it)) {
+                            is NetworkResult.Success -> listener.onDisplayed()
+                            is NetworkResult.Error -> {}
                         }
-                        PreferenceDataStoreHelper(activity.applicationContext)
-                            .removePreferenceCoroutine(zoneId)
                     }
+                    PreferenceDataStoreHelper(activity.applicationContext)
+                        .removePreferenceCoroutine(zoneId)
                 }
             }
         }
@@ -211,14 +208,89 @@ class ShowBannerAds(
             }
         })
 
-        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
+        view.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
                 tryTrack()
+                if (tracked) {
+                    view.viewTreeObserver.removeOnPreDrawListener(this)
+                }
+                return true
             }
+        })
 
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) = tryTrack()
             override fun onViewDetachedFromWindow(v: View) {}
         })
+
+        activity.supportFragmentManager.registerFragmentLifecycleCallbacks(
+            object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                override fun onFragmentResumed(
+                    fm: androidx.fragment.app.FragmentManager,
+                    f: androidx.fragment.app.Fragment
+                ) {
+                    tryTrack()
+                    if (tracked) {
+                        activity.supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
+                    }
+                }
+            }, true
+        )
     }
+
+//    private fun trackImpressionOnce(
+//        view: View,
+//        banner: NetworkBannerAd,
+//        activity: AppCompatActivity
+//    ) {
+//        var tracked = false
+//        fun tryTrack() {
+//            if (!tracked && view.isShown) {
+//                val rect = Rect()
+//                val visible = view.getGlobalVisibleRect(rect)
+//                if (visible && rect.height() > 0 && rect.width() > 0) {
+//                    tracked = true
+//                    ioScope.launch {
+//                        banner.trackers?.impression?.let {
+//                            when (val result =
+//                                BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
+//                                    it
+//                                )) {
+//                                is NetworkResult.Success -> {
+//                                    result.data.let { data ->
+//                                        listener.onDisplayed()
+//                                    }
+//                                }
+//
+//                                is NetworkResult.Error -> {
+//                                }
+//                            }
+//                        }
+//                        PreferenceDataStoreHelper(activity.applicationContext)
+//                            .removePreferenceCoroutine(zoneId)
+//                    }
+//                }
+//            }
+//        }
+//
+//        view.viewTreeObserver.addOnGlobalLayoutListener(object :
+//            ViewTreeObserver.OnGlobalLayoutListener {
+//            override fun onGlobalLayout() {
+//                tryTrack()
+//                if (tracked) {
+//                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
+//                }
+//            }
+//        })
+//
+//        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+//            override fun onViewAttachedToWindow(v: View) {
+//                tryTrack()
+//            }
+//
+//            override fun onViewDetachedFromWindow(v: View) {}
+//        })
+//    }
 
     fun destroyAds() {
         job.cancel()
