@@ -1,8 +1,10 @@
 package ir.ayantech.hamrahads.core
 
 import android.content.res.Resources
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
@@ -197,6 +199,14 @@ class ShowNativeAds(
             }
         }
     }
+    private fun isViewVisibleEnough(view: View): Boolean {
+        if (!view.isShown || view.alpha <= 0f) return false
+        val rect = Rect()
+        val visible = view.getGlobalVisibleRect(rect)
+        return visible &&
+                rect.height() >= view.height / 2 &&
+                rect.width() >= view.width / 2
+    }
 
     private fun trackImpressionOnce(
         view: View,
@@ -206,35 +216,23 @@ class ShowNativeAds(
         var tracked = false
 
         fun tryTrack() {
-            if (!tracked && view.isShown) {
-                val rect = android.graphics.Rect()
-                val visible = view.getGlobalVisibleRect(rect)
-                if (visible && rect.width() > 0 && rect.height() > 0) {
-                    tracked = true
-                    ioScope.launch {
-                        native.trackers?.impression?.let {
-                            when (val result =
-                                NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(
-                                    it
-                                )) {
-                                is NetworkResult.Success -> {
-                                    result.data.let { data ->
-                                        listener.onDisplayed()
-                                    }
-                                }
-                                is NetworkResult.Error -> {
-                                }
-                            }
-                            PreferenceDataStoreHelper(activity.applicationContext)
-                                .removePreferenceCoroutine(zoneId)
+            if (!tracked && isViewVisibleEnough(view)) {
+                tracked = true
+                ioScope.launch {
+                    native.trackers?.impression?.let {
+                        when (BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(it)) {
+                            is NetworkResult.Success -> listener.onDisplayed()
+                            is NetworkResult.Error -> {}
                         }
                     }
+                    PreferenceDataStoreHelper(activity.applicationContext)
+                        .removePreferenceCoroutine(zoneId)
                 }
             }
         }
 
         view.viewTreeObserver.addOnGlobalLayoutListener(object :
-            android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 tryTrack()
                 if (tracked) {
@@ -243,14 +241,89 @@ class ShowNativeAds(
             }
         })
 
-        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
+        view.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
                 tryTrack()
+                if (tracked) {
+                    view.viewTreeObserver.removeOnPreDrawListener(this)
+                }
+                return true
             }
+        })
 
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) = tryTrack()
             override fun onViewDetachedFromWindow(v: View) {}
         })
+
+        activity.supportFragmentManager.registerFragmentLifecycleCallbacks(
+            object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                override fun onFragmentResumed(
+                    fm: androidx.fragment.app.FragmentManager,
+                    f: androidx.fragment.app.Fragment
+                ) {
+                    tryTrack()
+                    if (tracked) {
+                        activity.supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
+                    }
+                }
+            }, true
+        )
     }
+
+//    private fun trackImpressionOnce(
+//        view: View,
+//        native: NetworkNativeAd,
+//        activity: AppCompatActivity
+//    ) {
+//        var tracked = false
+//
+//        fun tryTrack() {
+//            if (!tracked && view.isShown) {
+//                val rect = android.graphics.Rect()
+//                val visible = view.getGlobalVisibleRect(rect)
+//                if (visible && rect.width() > 0 && rect.height() > 0) {
+//                    tracked = true
+//                    ioScope.launch {
+//                        native.trackers?.impression?.let {
+//                            when (val result =
+//                                NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(
+//                                    it
+//                                )) {
+//                                is NetworkResult.Success -> {
+//                                    result.data.let { data ->
+//                                        listener.onDisplayed()
+//                                    }
+//                                }
+//                                is NetworkResult.Error -> {
+//                                }
+//                            }
+//                            PreferenceDataStoreHelper(activity.applicationContext)
+//                                .removePreferenceCoroutine(zoneId)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        view.viewTreeObserver.addOnGlobalLayoutListener(object :
+//            android.view.ViewTreeObserver.OnGlobalLayoutListener {
+//            override fun onGlobalLayout() {
+//                tryTrack()
+//                if (tracked) {
+//                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
+//                }
+//            }
+//        })
+//
+//        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+//            override fun onViewAttachedToWindow(v: View) {
+//                tryTrack()
+//            }
+//
+//            override fun onViewDetachedFromWindow(v: View) {}
+//        })
+//    }
 
     private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
         ioScope.launch {
