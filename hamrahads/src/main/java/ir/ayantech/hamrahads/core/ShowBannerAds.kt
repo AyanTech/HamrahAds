@@ -41,6 +41,7 @@ class ShowBannerAds(
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val activityRef = WeakReference(firstActivity)
+    private var isClick = false
 
     init {
         if (zoneId.isNotBlank()) {
@@ -148,17 +149,20 @@ class ShowBannerAds(
     }
 
     private fun onClickView(banner: NetworkBannerAd, activity: AppCompatActivity) {
-        ioScope.launch {
-            banner.trackers?.click?.let {
-                when (val result =
-                    BannerAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
-                    is NetworkResult.Success -> {
-                        result.data.let { data ->
-                            listener.onClick()
+        if (!isClick) {
+            isClick = true
+            ioScope.launch {
+                banner.trackers?.click?.let {
+                    when (val result =
+                        BannerAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
+                        is NetworkResult.Success -> {
+                            result.data.let { data ->
+                                listener.onClick()
+                            }
                         }
-                    }
 
-                    is NetworkResult.Error -> {
+                        is NetworkResult.Error -> {
+                        }
                     }
                 }
             }
@@ -187,7 +191,9 @@ class ShowBannerAds(
                 tracked = true
                 ioScope.launch {
                     banner.trackers?.impression?.let {
-                        when (BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(it)) {
+                        when (BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                            it
+                        )) {
                             is NetworkResult.Success -> listener.onDisplayed()
                             is NetworkResult.Error -> {}
                         }

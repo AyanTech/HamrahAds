@@ -40,6 +40,7 @@ class ShowNativeAds(
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val activityRef = WeakReference(firstActivity)
+    private var isClick = false
 
     init {
         if (zoneId.isNotBlank()) {
@@ -198,6 +199,7 @@ class ShowNativeAds(
             }
         }
     }
+
     private fun isViewVisibleEnough(view: View): Boolean {
         if (!view.isShown || view.alpha <= 0f) return false
         val rect = Rect()
@@ -219,7 +221,9 @@ class ShowNativeAds(
                 tracked = true
                 ioScope.launch {
                     native.trackers?.impression?.let {
-                        when (NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(it)) {
+                        when (NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(
+                            it
+                        )) {
                             is NetworkResult.Success -> listener.onDisplayed()
                             is NetworkResult.Error -> {}
                         }
@@ -271,20 +275,25 @@ class ShowNativeAds(
     }
 
     private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
-        ioScope.launch {
-            native.trackers?.click?.let {
-                when (val result =
-                    NativeAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
-                    is NetworkResult.Success -> {
-                        result.data.let { data ->
-                            listener.onClick()
+        if (!isClick) {
+            isClick = true
+            ioScope.launch {
+                native.trackers?.click?.let {
+                    when (val result =
+                        NativeAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
+                        is NetworkResult.Success -> {
+                            result.data.let { data ->
+                                listener.onClick()
+                            }
                         }
-                    }
-                    is NetworkResult.Error -> {
+
+                        is NetworkResult.Error -> {
+                        }
                     }
                 }
             }
         }
+
         handleIntent(
             activity,
             native.landingType,

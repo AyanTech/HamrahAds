@@ -32,9 +32,7 @@ import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkInterstitialAd
-import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.InterstitialAdsRepository
-import ir.ayantech.hamrahads.repository.NativeAdsRepository
 import ir.ayantech.hamrahads.utils.BlurTransformation
 import ir.ayantech.hamrahads.utils.handleIntent
 import ir.ayantech.hamrahads.utils.imageLoader
@@ -76,6 +74,7 @@ class ShowInterstitialAds(
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val mainScope = CoroutineScope(Dispatchers.Main + job)
     private val activityRef = WeakReference(firstActivity)
+    private var isClick = false
 
     init {
         if (zoneId.isNotBlank()) {
@@ -789,18 +788,25 @@ class ShowInterstitialAds(
             }
         }
     }
-    private fun onClickView(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
-        ioScope.launch {
-            interstitial.trackers?.click?.let {
-                when (val result =
-                    InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(it)) {
-                    is NetworkResult.Success -> {
-                        result.data.let { data ->
-                            listener.onClick()
-                        }
-                    }
-                    is NetworkResult.Error -> {
 
+    private fun onClickView(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
+        if (!isClick) {
+            isClick = true
+            ioScope.launch {
+                interstitial.trackers?.click?.let {
+                    when (val result =
+                        InterstitialAdsRepository(NetworkModule(activity.applicationContext)).click(
+                            it
+                        )) {
+                        is NetworkResult.Success -> {
+                            result.data.let { data ->
+                                listener.onClick()
+                            }
+                        }
+
+                        is NetworkResult.Error -> {
+
+                        }
                     }
                 }
             }
@@ -811,6 +817,7 @@ class ShowInterstitialAds(
             interstitial.landingLink
         )
     }
+
     private fun loadContainer(interstitial: NetworkInterstitialAd, activity: AppCompatActivity) {
         mainScope.launch {
             if (::backgroundImageView.isInitialized)
