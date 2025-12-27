@@ -95,7 +95,7 @@ data class NetworkDeviceInfo(
     var gdprConsent: String? = null,
 ) {
     private suspend fun fillFields(context: Context): NetworkDeviceInfo {
-        this.appVer = Build.VERSION.SDK_INT
+        this.appVer = getAppVersionCode(context).toInt()
         this.os = "android"
         this.osVer = Build.VERSION.RELEASE
         try {
@@ -143,12 +143,13 @@ data class NetworkDeviceInfo(
             this.operator = telephonyManager.simOperatorName
         }
 
-        this.lat = PreferenceDataStoreHelper(context).getPreference(
+        val helper = PreferenceDataStoreHelper(context)
+        this.lat = helper.getPreferenceCoroutine(
             PreferenceDataStoreConstants.HamrahLatitude,
             0.0
         )
 
-        this.lon = PreferenceDataStoreHelper(context).getPreference(
+        this.lon = helper.getPreferenceCoroutine(
             PreferenceDataStoreConstants.HamrahLongitude,
             0.0
         )
@@ -164,6 +165,19 @@ data class NetworkDeviceInfo(
         this.network = ""
 
         return this
+    }
+
+    fun getAppVersionCode(context: Context): Long {
+        val pkg = context.packageManager.getPackageInfo(
+            context.packageName,
+            0
+        )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            pkg.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            pkg.versionCode.toLong()
+        }
     }
 
     private fun getMyModel(): String {

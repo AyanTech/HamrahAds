@@ -4,6 +4,8 @@ import android.content.Context
 import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.listener.RequestListener
+import ir.ayantech.hamrahads.network.model.ErrorType
+import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkDeviceInfo
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
@@ -12,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class RequestBannerAds(
@@ -21,16 +24,24 @@ class RequestBannerAds(
 ) {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
-    private val mainScope = CoroutineScope(Dispatchers.Main + job)
 
     init {
         NetworkDeviceInfo().fetchNetworkDeviceInfo(context) {
             ioScope.launch {
-                val appKey = PreferenceDataStoreHelper(context).getPreference(
+                val appKey = PreferenceDataStoreHelper(context).getPreferenceCoroutine(
                     PreferenceDataStoreConstants.HamrahInitializer,
                     ""
                 )
-                if (appKey.isBlank() || zoneId.isBlank()) {
+                if (zoneId.isBlank()) {
+                    withContext(Dispatchers.Main) {
+                        listener.onError(NetworkError().getError(0, ErrorType.Local))
+                    }
+                    return@launch
+                }
+                if (appKey.isBlank()) {
+                    withContext(Dispatchers.Main) {
+                        listener.onError(NetworkError().getError(8, ErrorType.Local))
+                    }
                     return@launch
                 }
                 when (val result = BannerAdsRepository(NetworkModule(context)).fetchBannerAds(zoneId, it)) {
@@ -40,7 +51,7 @@ class RequestBannerAds(
                                 zoneId,
                                 data
                             )
-                            mainScope.launch {
+                            withContext(Dispatchers.Main) {
                                 listener.onSuccess()
                             }
                         }
@@ -48,7 +59,7 @@ class RequestBannerAds(
 
                     is NetworkResult.Error -> {
                         val error = result.errorResponse
-                        mainScope.launch {
+                        withContext(Dispatchers.Main) {
                             listener.onError(error)
                         }
                     }

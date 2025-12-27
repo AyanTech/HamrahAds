@@ -1,5 +1,6 @@
 package ir.ayantech.hamrahads.di
 
+import ir.ayantech.hamrahads.network.model.ErrorType
 import ir.ayantech.hamrahads.network.model.NetworkError
 import kotlinx.serialization.json.Json
 import retrofit2.Response
@@ -11,10 +12,10 @@ class NetworkDataFetcher {
             if (response.isSuccessful) {
                 response.body()?.let {
                     NetworkResult.Success(it)
-                } ?: NetworkResult.Error(NetworkError().getError(1))
+                } ?: NetworkResult.Error(NetworkError().getError(1, ErrorType.Remote))
             } else {
                 val errorBody = response.errorBody()?.string()
-                    ?: return NetworkResult.Error(NetworkError().getError(2))
+                    ?: return NetworkResult.Error(NetworkError().getError(2, ErrorType.Remote))
                 try {
                     NetworkResult.Error(Json.decodeFromString<NetworkError>(errorBody))
                 } catch (_: Exception) {
@@ -30,7 +31,7 @@ class NetworkDataFetcher {
             if (!e.message.isNullOrBlank()) {
                 NetworkResult.Error(NetworkError(description = e.message, code = "G00014"))
             } else {
-                NetworkResult.Error(NetworkError().getError(4))
+                NetworkResult.Error(NetworkError().getError(4, ErrorType.Remote))
             }
         }
     }

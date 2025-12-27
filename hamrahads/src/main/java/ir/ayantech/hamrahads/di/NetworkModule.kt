@@ -3,6 +3,7 @@ package ir.ayantech.hamrahads.di
 import android.content.Context
 import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import ir.ayantech.hamrahads.BuildConfig
 import ir.ayantech.hamrahads.network.NetworkService
 import ir.ayantech.hamrahads.utils.RetryInterceptor
 import kotlinx.serialization.json.Json
@@ -10,7 +11,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import java.net.Proxy
 import java.util.concurrent.TimeUnit
 
 class NetworkModule(private val context: Context) {
@@ -32,7 +32,6 @@ class NetworkModule(private val context: Context) {
             .addInterceptor(NetworkHeader(context))
             .addInterceptor(RetryInterceptor())
             .addInterceptor(loggingInterceptor())
-            .proxy(Proxy.NO_PROXY)
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
@@ -44,7 +43,11 @@ class NetworkModule(private val context: Context) {
         return HttpLoggingInterceptor { message ->
             Log.d("loggingInterceptor", "" + message)
         }.apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
 

@@ -8,9 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkInterstitialAd
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
@@ -23,6 +21,11 @@ class PreferenceDataStoreHelper(
     contextApplication: Context
 ) : IPreferenceDataStoreAPI {
 
+    companion object {
+        @Volatile
+        private var cachedAppKey: String? = null
+    }
+
     private val json = Json {
         ignoreUnknownKeys = true
     }
@@ -32,50 +35,80 @@ class PreferenceDataStoreHelper(
     override fun <T> getPreference(
         key: Preferences.Key<T>,
         defaultValue: T
-    ) = runBlocking {
-        async {
+    ): T {
+        if (key == PreferenceDataStoreConstants.HamrahInitializer) {
+            val cached = cachedAppKey
+            if (cached != null && defaultValue is String) {
+                @Suppress("UNCHECKED_CAST")
+                return cached as T
+            }
+        }
+
+        val value = runBlocking {
             dataSource.data.first()[key] ?: defaultValue
-        }.await()
+        }
+        if (key == PreferenceDataStoreConstants.HamrahInitializer && value is String) {
+            cachedAppKey = value
+        }
+        return value
     }
 
     override fun <T> putPreference(key: Preferences.Key<T>, value: T) {
         runBlocking {
-            launch {
-                dataSource.edit { preferences ->
-                    preferences[key] = value
-                }
+            dataSource.edit { preferences ->
+                preferences[key] = value
             }
+        }
+        if (key == PreferenceDataStoreConstants.HamrahInitializer && value is String) {
+            cachedAppKey = value
         }
     }
 
     override suspend fun <T> getPreferenceCoroutine(key: Preferences.Key<T>, defaultValue: T):
-            T = dataSource.data.first()[key] ?: defaultValue
+            T {
+        if (key == PreferenceDataStoreConstants.HamrahInitializer) {
+            val cached = cachedAppKey
+            if (cached != null && defaultValue is String) {
+                @Suppress("UNCHECKED_CAST")
+                return cached as T
+            }
+        }
+        val value = dataSource.data.first()[key] ?: defaultValue
+        if (key == PreferenceDataStoreConstants.HamrahInitializer && value is String) {
+            cachedAppKey = value
+        }
+        return value
+    }
 
     override suspend fun <T> putPreferenceCoroutine(key: Preferences.Key<T>, value: T) {
         dataSource.edit { preferences ->
             preferences[key] = value
         }
+        if (key == PreferenceDataStoreConstants.HamrahInitializer && value is String) {
+            cachedAppKey = value
+        }
     }
 
-    override suspend fun removePreferenceCoroutine(keyName: String) {
+    override suspend fun removePreferenceCoroutine(key: String) {
         dataSource.edit { preferences ->
-            val key = stringPreferencesKey(keyName)
-            preferences.remove(key)
+            preferences.remove(stringPreferencesKey(key))
+        }
+        if (key == PreferenceDataStoreConstants.HamrahInitializer.name) {
+            cachedAppKey = null
         }
     }
 
     override fun <T> removePreference(key: Preferences.Key<T>): Unit = runBlocking {
-        async {
-            dataSource.edit { preferences ->
-                preferences.remove(key)
-            }
-        }.await()
+        dataSource.edit { preferences ->
+            preferences.remove(key)
+        }
     }
 
     override suspend fun clearAllPreference() {
         dataSource.edit { preferences ->
             preferences.clear()
         }
+        cachedAppKey = null
     }
 
     override suspend fun putPreferenceBanner(
@@ -111,39 +144,66 @@ class PreferenceDataStoreHelper(
     override fun getPreferenceBanner(
         key: String,
     ): NetworkBannerAd? = runBlocking {
-        async {
-            val text = dataSource.data.first()[stringPreferencesKey(key)]
-            try {
-                text?.let { json.decodeFromString<NetworkBannerAd>(it) }
-            } catch (e: Exception) {
-                null
-            }
-        }.await()
+        val text = dataSource.data.first()[stringPreferencesKey(key)]
+        try {
+            text?.let { json.decodeFromString<NetworkBannerAd>(it) }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override fun getPreferenceNative(
         key: String,
     ): NetworkNativeAd? = runBlocking {
-        async {
-            val text = dataSource.data.first()[stringPreferencesKey(key)]
-            try {
-                text?.let { json.decodeFromString<NetworkNativeAd>(it) }
-            } catch (e: Exception) {
-                null
-            }
-        }.await()
+        val text = dataSource.data.first()[stringPreferencesKey(key)]
+        try {
+            text?.let { json.decodeFromString<NetworkNativeAd>(it) }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override fun getPreferenceInterstitial(
         key: String,
     ): NetworkInterstitialAd? = runBlocking {
-        async {
-            val text = dataSource.data.first()[stringPreferencesKey(key)]
-            try {
-                text?.let { json.decodeFromString<NetworkInterstitialAd>(text) }
-            } catch (e: Exception) {
-                null
-            }
-        }.await()
+        val text = dataSource.data.first()[stringPreferencesKey(key)]
+        try {
+            text?.let { json.decodeFromString<NetworkInterstitialAd>(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getPreferenceBannerCoroutine(
+        key: String,
+    ): NetworkBannerAd? {
+        val text = dataSource.data.first()[stringPreferencesKey(key)]
+        return try {
+            text?.let { json.decodeFromString<NetworkBannerAd>(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getPreferenceNativeCoroutine(
+        key: String,
+    ): NetworkNativeAd? {
+        val text = dataSource.data.first()[stringPreferencesKey(key)]
+        return try {
+            text?.let { json.decodeFromString<NetworkNativeAd>(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getPreferenceInterstitialCoroutine(
+        key: String,
+    ): NetworkInterstitialAd? {
+        val text = dataSource.data.first()[stringPreferencesKey(key)]
+        return try {
+            text?.let { json.decodeFromString<NetworkInterstitialAd>(it) }
+        } catch (e: Exception) {
+            null
+        }
     }
 }

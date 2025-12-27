@@ -66,7 +66,7 @@ class InterstitialFragment : Fragment() {
 
                             override fun onError(error: NetworkError) {
                                 binding.textStatus.text =
-                                    "onError ShowInterstitialAds " + error.code
+                                    "onError ShowInterstitialAds " + error.code + " " + error.type
                             }
 
                             override fun onClose() {
@@ -86,7 +86,7 @@ class InterstitialFragment : Fragment() {
                 }
 
                 override fun onError(error: NetworkError) {
-                    binding.textStatus.text = "onError RequestInterstitialAds " + error.code
+                    binding.textStatus.text = "onError RequestInterstitialAds " + error.code + " " + error.type
                 }
             }).build()
     }

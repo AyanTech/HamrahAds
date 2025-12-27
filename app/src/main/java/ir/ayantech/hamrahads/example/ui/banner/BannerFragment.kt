@@ -13,7 +13,6 @@ import ir.ayantech.hamrahads.core.RequestBannerAds
 import ir.ayantech.hamrahads.core.ShowBannerAds
 import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
 import ir.ayantech.hamrahads.example.databinding.FragmentBannerBinding
-import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.network.model.NetworkError
@@ -67,7 +66,8 @@ class BannerFragment : Fragment() {
                             }
 
                             override fun onError(error: NetworkError) {
-                                binding.textStatus.text = "onError ShowBannerAds " + error.code
+                                binding.textStatus.text =
+                                    "onError ShowBannerAds " + error.code + " " + error.type
                             }
 
                             override fun onClick() {
@@ -83,7 +83,7 @@ class BannerFragment : Fragment() {
                 }
 
                 override fun onError(error: NetworkError) {
-                    binding.textStatus.text = "onError RequestBannerAds " + error.code
+                    binding.textStatus.text = "onError RequestBannerAds " + error.code + " " + error.type
                 }
             }).build()
     }

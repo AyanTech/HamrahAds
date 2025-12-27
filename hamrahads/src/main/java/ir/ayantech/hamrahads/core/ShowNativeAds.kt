@@ -1,6 +1,5 @@
 package ir.ayantech.hamrahads.core
 
-import android.content.res.Resources
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +17,7 @@ import ir.ayantech.hamrahads.R
 import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.listener.ShowListener
+import ir.ayantech.hamrahads.network.model.ErrorType
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.network.model.NetworkNativeAd
 import ir.ayantech.hamrahads.repository.NativeAdsRepository
@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
 
@@ -42,29 +43,49 @@ class ShowNativeAds(
     private val activityRef = WeakReference(firstActivity)
     private var isClick = false
 
+    private var trackedViewRef: WeakReference<View>? = null
+    private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    private var preDrawListener: ViewTreeObserver.OnPreDrawListener? = null
+    private var attachStateListener: View.OnAttachStateChangeListener? = null
+    private var fragmentLifecycleCallbacks: androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks? =
+        null
+
     init {
-        if (zoneId.isNotBlank()) {
-            activityRef.get()?.let { activity ->
-                if (!activity.isFinishing && !activity.isDestroyed) {
-                    val native =
-                        PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNative(
-                            zoneId,
-                        )
-                    if (native != null) {
-                        if (native.landingType != null
-                            && !native.cta.isNullOrEmpty()
-                            && !native.caption.isNullOrEmpty()
-                            && !native.landingLink.isNullOrEmpty()
-                            && !native.trackers?.click.isNullOrEmpty()
-                            && !native.trackers?.impression.isNullOrEmpty()
-                        ) {
-                            showView(viewGroup, native, activity)
-                            listener.onLoaded()
-                            trackImpressionOnce(viewGroup, native, activity)
-                        } else {
-                            listener.onError(NetworkError().getError(6))
-                        }
-                    }
+        start()
+    }
+
+    private fun start() {
+        if (zoneId.isBlank()) {
+            listener.onError(NetworkError().getError(0, ErrorType.Local))
+            return
+        }
+
+        val activity = activityRef.get()
+        if (activity == null || activity.isFinishing || activity.isDestroyed) {
+            listener.onError(NetworkError().getError(0, ErrorType.Local))
+            return
+        }
+
+        ioScope.launch {
+            val native = PreferenceDataStoreHelper(activity.applicationContext).getPreferenceNativeCoroutine(zoneId)
+            withContext(Dispatchers.Main) {
+                if (native == null) {
+                    listener.onError(NetworkError().getError(6, ErrorType.Local))
+                    return@withContext
+                }
+
+                if (native.landingType != null
+                    && !native.cta.isNullOrEmpty()
+                    && !native.caption.isNullOrEmpty()
+                    && !native.landingLink.isNullOrEmpty()
+                    && !native.trackers?.click.isNullOrEmpty()
+                    && !native.trackers?.impression.isNullOrEmpty()
+                ) {
+                    showView(viewGroup, native, activity)
+                    listener.onLoaded()
+                    trackImpressionOnce(viewGroup, native, activity)
+                } else {
+                    listener.onError(NetworkError().getError(6, ErrorType.Local))
                 }
             }
         }
@@ -110,21 +131,21 @@ class ShowNativeAds(
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.logo)
-                                    .listener(
-                                        onError = { request, result ->
-                                            destroyAds()
-                                            if (!result.throwable.message.isNullOrBlank()) {
-                                                listener.onError(
-                                                    NetworkError(
-                                                        description = "Failed to load image: ${result.throwable.message}",
-                                                        code = "G00015"
-                                                    )
-                                                )
-                                            } else {
-                                                listener.onError(NetworkError().getError(5))
-                                            }
-                                        }
-                                    )
+//                                    .listener(
+//                                        onError = { request, result ->
+//                                            destroyAds()
+//                                            if (!result.throwable.message.isNullOrBlank()) {
+//                                                listener.onError(
+//                                                    NetworkError(
+//                                                        description = "Failed to load image: ${result.throwable.message}",
+//                                                        code = "G00015"
+//                                                    )
+//                                                )
+//                                            } else {
+//                                                listener.onError(NetworkError().getError(5))
+//                                            }
+//                                        }
+//                                    )
                                     .target(
                                         onSuccess = { result ->
                                             activityRef.get()?.let { currentActivity ->
@@ -132,7 +153,7 @@ class ShowNativeAds(
                                                     imageLoader.enqueue(
                                                         ImageRequest.Builder(currentActivity.applicationContext)
                                                             .target(childView)
-                                                            .data(result.asDrawable(Resources.getSystem()))
+                                                            .data(result.asDrawable(currentActivity.resources))
                                                             .build()
                                                     )
                                                 }
@@ -152,21 +173,21 @@ class ShowNativeAds(
                             imageLoader.enqueue(
                                 ImageRequest.Builder(activity.applicationContext)
                                     .data(native.banner1136x640)
-                                    .listener(
-                                        onError = { request, result ->
-                                            destroyAds()
-                                            if (!result.throwable.message.isNullOrBlank()) {
-                                                listener.onError(
-                                                    NetworkError(
-                                                        description = "Failed to load image: ${result.throwable.message}",
-                                                        code = "G00015"
-                                                    )
-                                                )
-                                            } else {
-                                                listener.onError(NetworkError().getError(5))
-                                            }
-                                        }
-                                    )
+//                                    .listener(
+//                                        onError = { request, result ->
+//                                            destroyAds()
+//                                            if (!result.throwable.message.isNullOrBlank()) {
+//                                                listener.onError(
+//                                                    NetworkError(
+//                                                        description = "Failed to load image: ${result.throwable.message}",
+//                                                        code = "G00015"
+//                                                    )
+//                                                )
+//                                            } else {
+//                                                listener.onError(NetworkError().getError(5))
+//                                            }
+//                                        }
+//                                    )
                                     .target(
                                         onSuccess = { result ->
                                             activityRef.get()?.let { currentActivity ->
@@ -174,7 +195,7 @@ class ShowNativeAds(
                                                     imageLoader.enqueue(
                                                         ImageRequest.Builder(currentActivity.applicationContext)
                                                             .target(childView)
-                                                            .data(result.asDrawable(Resources.getSystem()))
+                                                            .data(result.asDrawable(currentActivity.resources))
                                                             .build()
                                                     )
                                                 }
@@ -219,13 +240,16 @@ class ShowNativeAds(
         fun tryTrack() {
             if (!tracked && isViewVisibleEnough(view)) {
                 tracked = true
+                clearTrackingObservers(activity)
                 ioScope.launch {
                     native.trackers?.impression?.let {
                         when (NativeAdsRepository(NetworkModule(activity.applicationContext)).impression(
                             it
                         )) {
                             is NetworkResult.Success -> listener.onDisplayed()
-                            is NetworkResult.Error -> {}
+                            is NetworkResult.Error -> {
+
+                            }
                         }
                     }
                     PreferenceDataStoreHelper(activity.applicationContext)
@@ -234,44 +258,62 @@ class ShowNativeAds(
             }
         }
 
-        view.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
+        trackedViewRef = WeakReference(view)
+
+        globalLayoutListener = object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 tryTrack()
-                if (tracked) {
-                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                }
             }
-        })
+        }
+        view.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
 
-        view.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+        preDrawListener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
                 tryTrack()
-                if (tracked) {
-                    view.viewTreeObserver.removeOnPreDrawListener(this)
-                }
                 return true
             }
-        })
+        }
+        view.viewTreeObserver.addOnPreDrawListener(preDrawListener)
 
-        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+        attachStateListener = object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) = tryTrack()
             override fun onViewDetachedFromWindow(v: View) {}
-        })
+        }
+        view.addOnAttachStateChangeListener(attachStateListener)
 
-        activity.supportFragmentManager.registerFragmentLifecycleCallbacks(
+        fragmentLifecycleCallbacks =
             object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentResumed(
                     fm: androidx.fragment.app.FragmentManager,
                     f: androidx.fragment.app.Fragment
                 ) {
                     tryTrack()
-                    if (tracked) {
-                        activity.supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
-                    }
                 }
-            }, true
-        )
+            }
+        fragmentLifecycleCallbacks?.let {
+            activity.supportFragmentManager.registerFragmentLifecycleCallbacks(it, true)
+        }
+    }
+
+    private fun clearTrackingObservers(activity: AppCompatActivity?) {
+        val trackedView = trackedViewRef?.get()
+        if (trackedView != null) {
+            val observer = trackedView.viewTreeObserver
+            if (observer.isAlive) {
+                globalLayoutListener?.let { observer.removeOnGlobalLayoutListener(it) }
+                preDrawListener?.let { observer.removeOnPreDrawListener(it) }
+            }
+            attachStateListener?.let { trackedView.removeOnAttachStateChangeListener(it) }
+        }
+        globalLayoutListener = null
+        preDrawListener = null
+        attachStateListener = null
+        trackedViewRef = null
+
+        fragmentLifecycleCallbacks?.let { callbacks ->
+            activity?.supportFragmentManager?.unregisterFragmentLifecycleCallbacks(callbacks)
+        }
+        fragmentLifecycleCallbacks = null
     }
 
     private fun onClickView(native: NetworkNativeAd, activity: AppCompatActivity) {
@@ -288,6 +330,7 @@ class ShowNativeAds(
                         }
 
                         is NetworkResult.Error -> {
+
                         }
                     }
                 }
@@ -302,6 +345,7 @@ class ShowNativeAds(
     }
 
     fun destroyAds() {
+        clearTrackingObservers(activityRef.get())
         job.cancel()
     }
 }

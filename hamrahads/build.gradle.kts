@@ -9,13 +9,23 @@ plugins {
 
 android {
     namespace = "ir.ayantech.hamrahads"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 23
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
     }
 
     buildTypes {
@@ -31,10 +41,34 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 }
+
+val cleanDebugLibraryClassesJar by tasks.registering {
+    doLast {
+        val jarFile = layout.buildDirectory.file(
+            "intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar"
+        ).get().asFile
+        if (!jarFile.exists()) return@doLast
+
+        repeat(30) {
+            runCatching {
+                jarFile.delete()
+            }
+            if (!jarFile.exists()) return@doLast
+            Thread.sleep(200)
+        }
+    }
+}
+
+tasks.matching { it.name == "bundleLibCompileToJarDebug" }.configureEach {
+    dependsOn(cleanDebugLibraryClassesJar)
+}
+
 afterEvaluate {
     publishing {
         publications {

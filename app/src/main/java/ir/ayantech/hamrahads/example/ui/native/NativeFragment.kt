@@ -67,7 +67,7 @@ class NativeFragment : Fragment() {
                             }
 
                             override fun onError(error: NetworkError) {
-                                binding.textStatus.text = "onError ShowNativeAds " + error.code
+                                binding.textStatus.text = "onError ShowNativeAds " + error.code + " " + error.type
                             }
 
                             override fun onClick() {
@@ -82,7 +82,7 @@ class NativeFragment : Fragment() {
                 }
 
                 override fun onError(error: NetworkError) {
-                    binding.textStatus.text = "onError RequestNativeAds " + error.code
+                    binding.textStatus.text = "onError RequestNativeAds " + error.code + " " + error.type
                 }
             }).build()
     }

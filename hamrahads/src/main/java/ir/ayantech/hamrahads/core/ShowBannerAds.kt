@@ -1,6 +1,5 @@
 package ir.ayantech.hamrahads.core
 
-import android.content.res.Resources
 import android.graphics.Rect
 import android.view.Gravity
 import android.view.View
@@ -18,6 +17,7 @@ import ir.ayantech.hamrahads.di.NetworkModule
 import ir.ayantech.hamrahads.di.NetworkResult
 import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
 import ir.ayantech.hamrahads.listener.ShowListener
+import ir.ayantech.hamrahads.network.model.ErrorType
 import ir.ayantech.hamrahads.network.model.NetworkBannerAd
 import ir.ayantech.hamrahads.network.model.NetworkError
 import ir.ayantech.hamrahads.repository.BannerAdsRepository
@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
 class ShowBannerAds(
@@ -43,26 +44,45 @@ class ShowBannerAds(
     private val activityRef = WeakReference(firstActivity)
     private var isClick = false
 
+    private var trackedViewRef: WeakReference<View>? = null
+    private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    private var preDrawListener: ViewTreeObserver.OnPreDrawListener? = null
+    private var attachStateListener: View.OnAttachStateChangeListener? = null
+    private var fragmentLifecycleCallbacks: androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks? =
+        null
+
     init {
-        if (zoneId.isNotBlank()) {
-            activityRef.get()?.let { activity ->
-                if (!activity.isFinishing && !activity.isDestroyed) {
-                    val banner =
-                        PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBanner(
-                            zoneId
-                        )
-                    if (banner != null) {
-                        if (banner.landingType != null
-                            && !banner.landingLink.isNullOrEmpty()
-                            && !banner.trackers?.click.isNullOrEmpty()
-                            && !banner.trackers?.impression.isNullOrEmpty()
-                            && hasBannerImage(size, banner)
-                        ) {
-                            showView(banner, activity)
-                        } else {
-                            listener.onError(NetworkError().getError(6))
-                        }
-                    }
+        start()
+    }
+
+    private fun start() {
+        if (zoneId.isBlank()) {
+            listener.onError(NetworkError().getError(0, ErrorType.Local))
+            return
+        }
+
+        val activity = activityRef.get()
+        if (activity == null || activity.isFinishing || activity.isDestroyed) {
+            listener.onError(NetworkError().getError(0, ErrorType.Local))
+            return
+        }
+
+        ioScope.launch {
+            val banner = PreferenceDataStoreHelper(activity.applicationContext).getPreferenceBannerCoroutine(zoneId)
+            withContext(Dispatchers.Main) {
+                if (banner == null) {
+                    listener.onError(NetworkError().getError(6, ErrorType.Local))
+                    return@withContext
+                }
+                if (banner.landingType != null
+                    && !banner.landingLink.isNullOrEmpty()
+                    && !banner.trackers?.click.isNullOrEmpty()
+                    && !banner.trackers?.impression.isNullOrEmpty()
+                    && hasBannerImage(size, banner)
+                ) {
+                    showView(banner, activity)
+                } else {
+                    listener.onError(NetworkError().getError(6, ErrorType.Local))
                 }
             }
         }
@@ -115,7 +135,7 @@ class ShowBannerAds(
                                 )
                             )
                         } else {
-                            listener.onError(NetworkError().getError(5))
+                            listener.onError(NetworkError().getError(5, ErrorType.Remote))
                         }
                     }
                 )
@@ -126,7 +146,7 @@ class ShowBannerAds(
                                 imageLoader.enqueue(
                                     ImageRequest.Builder(currentActivity.applicationContext)
                                         .target(adImage)
-                                        .data(result.asDrawable(Resources.getSystem()))
+                                        .data(result.asDrawable(currentActivity.resources))
                                         .build()
                                 )
 
@@ -189,6 +209,7 @@ class ShowBannerAds(
         fun tryTrack() {
             if (!tracked && isViewVisibleEnough(view)) {
                 tracked = true
+                clearTrackingObservers(activity)
                 ioScope.launch {
                     banner.trackers?.impression?.let {
                         when (BannerAdsRepository(NetworkModule(activity.applicationContext)).impression(
@@ -204,44 +225,62 @@ class ShowBannerAds(
             }
         }
 
-        view.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
+        trackedViewRef = WeakReference(view)
+
+        globalLayoutListener = object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 tryTrack()
-                if (tracked) {
-                    view.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                }
             }
-        })
+        }
+        view.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
 
-        view.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+        preDrawListener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
                 tryTrack()
-                if (tracked) {
-                    view.viewTreeObserver.removeOnPreDrawListener(this)
-                }
                 return true
             }
-        })
+        }
+        view.viewTreeObserver.addOnPreDrawListener(preDrawListener)
 
-        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+        attachStateListener = object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) = tryTrack()
             override fun onViewDetachedFromWindow(v: View) {}
-        })
+        }
+        view.addOnAttachStateChangeListener(attachStateListener)
 
-        activity.supportFragmentManager.registerFragmentLifecycleCallbacks(
+        fragmentLifecycleCallbacks =
             object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentResumed(
                     fm: androidx.fragment.app.FragmentManager,
                     f: androidx.fragment.app.Fragment
                 ) {
                     tryTrack()
-                    if (tracked) {
-                        activity.supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
-                    }
                 }
-            }, true
-        )
+            }
+        fragmentLifecycleCallbacks?.let {
+            activity.supportFragmentManager.registerFragmentLifecycleCallbacks(it, true)
+        }
+    }
+
+    private fun clearTrackingObservers(activity: AppCompatActivity?) {
+        val trackedView = trackedViewRef?.get()
+        if (trackedView != null) {
+            val observer = trackedView.viewTreeObserver
+            if (observer.isAlive) {
+                globalLayoutListener?.let { observer.removeOnGlobalLayoutListener(it) }
+                preDrawListener?.let { observer.removeOnPreDrawListener(it) }
+            }
+            attachStateListener?.let { trackedView.removeOnAttachStateChangeListener(it) }
+        }
+        globalLayoutListener = null
+        preDrawListener = null
+        attachStateListener = null
+        trackedViewRef = null
+
+        fragmentLifecycleCallbacks?.let { callbacks ->
+            activity?.supportFragmentManager?.unregisterFragmentLifecycleCallbacks(callbacks)
+        }
+        fragmentLifecycleCallbacks = null
     }
 
 //    private fun trackImpressionOnce(
@@ -299,9 +338,12 @@ class ShowBannerAds(
 //    }
 
     fun destroyAds() {
+        clearTrackingObservers(activityRef.get())
         job.cancel()
-        if (::container.isInitialized)
+        if (::container.isInitialized) {
+            (container.parent as? ViewGroup)?.removeView(container)
             container.removeAllViews()
+        }
     }
 
     private fun hasBannerImage(size: HamrahAdsBannerType, banner: NetworkBannerAd): Boolean {

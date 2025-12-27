@@ -19,18 +19,21 @@ class Initializer(
 ) {
     init {
         LocationTracker(context).startTrackingLocation { latitude, longitude ->
-            PreferenceDataStoreHelper(context).putPreference(
-                PreferenceDataStoreConstants.HamrahLatitude,
-                latitude
-            )
-
-            PreferenceDataStoreHelper(context).putPreference(
-                PreferenceDataStoreConstants.HamrahLongitude,
-                longitude
-            )
+            CoroutineScope(Dispatchers.IO).launch {
+                val helper = PreferenceDataStoreHelper(context)
+                helper.putPreferenceCoroutine(
+                    PreferenceDataStoreConstants.HamrahLatitude,
+                    latitude
+                )
+                helper.putPreferenceCoroutine(
+                    PreferenceDataStoreConstants.HamrahLongitude,
+                    longitude
+                )
+            }
         }
         CoroutineScope(Dispatchers.IO).launch {
-            val cachedInitKey = PreferenceDataStoreHelper(context).getPreference(
+            val helper = PreferenceDataStoreHelper(context)
+            val cachedInitKey = helper.getPreferenceCoroutine(
                 PreferenceDataStoreConstants.HamrahInitializer,
                 ""
             )
@@ -40,7 +43,7 @@ class Initializer(
                 when (val result =
                     InitializerRepository(NetworkModule(context)).fetchProfileInfo(hamrahAdsId)) {
                     is NetworkResult.Success -> {
-                        PreferenceDataStoreHelper(context).putPreference(
+                        helper.putPreferenceCoroutine(
                             PreferenceDataStoreConstants.HamrahInitializer,
                             hamrahAdsId
                         )

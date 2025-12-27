@@ -25,6 +25,18 @@ interface IPreferenceDataStoreAPI {
         key: String,
     ): NetworkInterstitialAd?
 
+    suspend fun getPreferenceBannerCoroutine(
+        key: String,
+    ): NetworkBannerAd?
+
+    suspend fun getPreferenceNativeCoroutine(
+        key: String,
+    ): NetworkNativeAd?
+
+    suspend fun getPreferenceInterstitialCoroutine(
+        key: String,
+    ): NetworkInterstitialAd?
+
     fun <T> getPreference(key: Preferences.Key<T>, defaultValue: T): T
 
     fun <T> putPreference(key: Preferences.Key<T>, value: T)

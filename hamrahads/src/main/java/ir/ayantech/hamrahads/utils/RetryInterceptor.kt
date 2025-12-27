@@ -1,5 +1,6 @@
 package ir.ayantech.hamrahads.utils
 
+import ir.ayantech.hamrahads.network.model.ErrorType
 import ir.ayantech.hamrahads.network.model.NetworkError
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -33,7 +34,7 @@ class RetryInterceptor(
             }
             retryCount++
         }
-        throw lastException ?: IOException(NetworkError().getError(4).description)
+        throw lastException ?: IOException(NetworkError().getError(4, ErrorType.Remote).description)
     }
 
     private fun shouldRetry(errorCode: Int): Boolean {
