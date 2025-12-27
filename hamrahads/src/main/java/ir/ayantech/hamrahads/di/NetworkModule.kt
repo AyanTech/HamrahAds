@@ -29,6 +29,7 @@ class NetworkModule(private val context: Context) {
     private fun okHttpClient(): OkHttpClient {
         return OkHttpClient
             .Builder()
+            .retryOnConnectionFailure(false)
             .addInterceptor(NetworkHeader(context))
             .addInterceptor(RetryInterceptor())
             .addInterceptor(loggingInterceptor())

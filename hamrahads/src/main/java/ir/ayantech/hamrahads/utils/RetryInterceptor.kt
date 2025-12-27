@@ -5,7 +5,6 @@ import ir.ayantech.hamrahads.network.model.NetworkError
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
-import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLHandshakeException
 
@@ -15,37 +14,60 @@ class RetryInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        var response: Response
+        if (!isRetryableRequest(request)) {
+            return chain.proceed(request)
+        }
+
         var retryCount = 0
-        var lastException: Exception? = null
+        var lastException: IOException? = null
 
         while (retryCount < maxRetries) {
             try {
-                response = chain.proceed(request)
-                if (response.isSuccessful || !shouldRetry(response.code)) {
-                    return response
-                }
-                response.close()
-            } catch (e: Exception) {
+                return chain.proceed(request)
+            } catch (e: IOException) {
                 lastException = e
                 if (!shouldRetry(e)) {
                     throw e
                 }
+
+                retryCount++
+                if (retryCount >= maxRetries) {
+                    break
+                }
+
+                val delayMillis = backoffDelayMillis(retryCount)
+                if (delayMillis > 0) {
+                    try {
+                        Thread.sleep(delayMillis)
+                    } catch (ie: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        throw e
+                    }
+                }
             }
-            retryCount++
         }
         throw lastException ?: IOException(NetworkError().getError(4, ErrorType.Remote).description)
     }
 
-    private fun shouldRetry(errorCode: Int): Boolean {
-        return errorCode == 408 || errorCode >= 500
+    private fun isRetryableRequest(request: okhttp3.Request): Boolean {
+        if (maxRetries <= 1) return false
+        if (request.method != "GET") return false
+
+        val path = request.url.encodedPath
+        return path.contains("/ads/") || path.contains("/init/")
     }
 
-    private fun shouldRetry(exception: Exception): Boolean {
+    private fun shouldRetry(exception: IOException): Boolean {
         return when (exception) {
             is SSLHandshakeException -> false
             is UnknownHostException -> false
-            else -> exception is SocketTimeoutException || exception is IOException
+            else -> true
         }
+    }
+
+    private fun backoffDelayMillis(retryCount: Int): Long {
+        val base = 200L
+        val multiplier = 1L shl (retryCount - 1).coerceAtMost(4)
+        return (base * multiplier).coerceAtMost(1_000L)
     }
 }
