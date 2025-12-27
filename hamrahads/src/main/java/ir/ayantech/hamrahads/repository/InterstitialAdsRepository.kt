@@ -21,6 +21,7 @@ class InterstitialAdsRepository(private var networkModule: NetworkModule) {
             networkModule.createNetworkService().getInterstitialAds(
                 zoneId = zoneId,
                 appVer = networkDeviceInfo.appVer,
+                ver = networkDeviceInfo.ver,
                 brand = networkDeviceInfo.brand.toString(),
                 gdprConsent = networkDeviceInfo.gdprConsent,
                 height = networkDeviceInfo.height,

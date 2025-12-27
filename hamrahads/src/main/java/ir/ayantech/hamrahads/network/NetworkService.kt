@@ -22,6 +22,7 @@ interface NetworkService {
 
     @GET("ads/")
     suspend fun getBannerAds(
+        @Query("ver") ver: String?,
         @Query("zone_id") zoneId: String?,
         @Query("app_ver") appVer: Int?,
         @Query("brand") brand: String?,
@@ -45,6 +46,7 @@ interface NetworkService {
 
     @GET("ads/")
     suspend fun getNativeAds(
+        @Query("ver") ver: String?,
         @Query("zone_id") zoneId: String?,
         @Query("app_ver") appVer: Int?,
         @Query("brand") brand: String?,
@@ -68,6 +70,7 @@ interface NetworkService {
 
     @GET("ads/")
     suspend fun getInterstitialAds(
+        @Query("ver") ver: String?,
         @Query("zone_id") zoneId: String?,
         @Query("app_ver") appVer: Int?,
         @Query("brand") brand: String?,

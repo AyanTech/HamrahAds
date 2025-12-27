@@ -7,6 +7,8 @@ plugins {
     id("maven-publish")
 }
 
+val hamrahAdsSdkVersion = "0.1.39"
+
 android {
     namespace = "ir.ayantech.hamrahads"
     compileSdk = 36
@@ -16,6 +18,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        buildConfigField("String", "HAMRAHADS_SDK_VERSION", "\"$hamrahAdsSdkVersion\"")
     }
 
     buildFeatures {
@@ -76,7 +80,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.ayantech"
                 artifactId = "HamrahAds"
-                version = "0.1.39"
+                version = hamrahAdsSdkVersion
             }
         }
     }

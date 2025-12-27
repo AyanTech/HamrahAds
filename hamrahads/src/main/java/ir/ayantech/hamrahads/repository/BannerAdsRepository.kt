@@ -19,6 +19,7 @@ class BannerAdsRepository(private var networkModule: NetworkModule) {
             networkModule.createNetworkService().getBannerAds(
                 zoneId = zoneId,
                 appVer = networkDeviceInfo.appVer,
+                ver = networkDeviceInfo.ver,
                 brand = networkDeviceInfo.brand.toString(),
                 gdprConsent = networkDeviceInfo.gdprConsent,
                 height = networkDeviceInfo.height,

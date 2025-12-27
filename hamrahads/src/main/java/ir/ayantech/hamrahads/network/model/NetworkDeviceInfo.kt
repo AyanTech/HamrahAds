@@ -10,6 +10,7 @@ import android.telephony.TelephonyManager
 import android.webkit.WebView
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import ir.ayantech.hamrahads.BuildConfig
 import ir.ayantech.hamrahads.domain.enums.Brand
 import ir.ayantech.hamrahads.utils.deviceUtils.DeviceUtils
 import ir.ayantech.hamrahads.utils.preferenceDataStore.PreferenceDataStoreConstants
@@ -36,6 +37,9 @@ data class NetworkDeviceInfo(
 
     @SerialName("pkg")
     var pkg: String? = null,
+
+    @SerialName("ver")
+    var ver: String? = null,
 
     @SerialName("app_ver")
     var appVer: Int? = null,
@@ -98,6 +102,7 @@ data class NetworkDeviceInfo(
         this.appVer = getAppVersionCode(context).toInt()
         this.os = "android"
         this.osVer = Build.VERSION.RELEASE
+        this.ver = BuildConfig.HAMRAHADS_SDK_VERSION
         try {
             this.brand = Brand.valueOf(Build.MANUFACTURER.lowercase())
         } catch (e: IllegalArgumentException) {

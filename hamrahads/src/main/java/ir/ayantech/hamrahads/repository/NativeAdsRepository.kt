@@ -19,6 +19,7 @@ class NativeAdsRepository(private var networkModule: NetworkModule) {
             networkModule.createNetworkService().getNativeAds(
                 zoneId = zoneId,
                 appVer = networkDeviceInfo.appVer,
+                ver = networkDeviceInfo.ver,
                 brand = networkDeviceInfo.brand.toString(),
                 gdprConsent = networkDeviceInfo.gdprConsent,
                 height = networkDeviceInfo.height,
