@@ -4,7 +4,6 @@ import android.content.Context
 import coil3.ImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import okhttp3.OkHttpClient
-import java.net.Proxy
 import java.util.concurrent.TimeUnit
 
 fun imageLoader(context: Context): ImageLoader {
