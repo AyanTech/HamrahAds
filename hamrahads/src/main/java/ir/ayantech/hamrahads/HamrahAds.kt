@@ -106,6 +106,7 @@ class HamrahAds {
 
         fun build(): BannerAdView? {
             return if (::activity.isInitialized &&
+                ::zoneId.isInitialized &&
                 ::showListener.isInitialized &&
                 ::size.isInitialized &&
                 zoneId.isNotBlank()
@@ -172,6 +173,7 @@ class HamrahAds {
 
         fun build(): InterstitialAdView? {
             return if (::activity.isInitialized &&
+                ::zoneId.isInitialized &&
                 ::showListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
@@ -236,6 +238,7 @@ class HamrahAds {
 
         fun build(): NativeAdView? {
             return if (::activity.isInitialized &&
+                ::zoneId.isInitialized &&
                 ::showListener.isInitialized &&
                 ::viewGroup.isInitialized &&
                 zoneId.isNotBlank()
