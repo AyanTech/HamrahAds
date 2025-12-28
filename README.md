@@ -1,6 +1,6 @@
 # HamrahAds SDK (Android)
 
-SDK تبلیغات هم‌راه‌ادز برای اندروید (Kotlin/Java) با پشتیبانی از **بنر**، **بینابینی (Interstitial)** و **نیتیو (Native)**.
+ا SDK تبلیغات هم‌راه‌ادز برای اندروید (Kotlin/Java) با پشتیبانی از **بنر**، **بینابینی (Interstitial)** و **نیتیو (Native)**.
 
 ---
 
