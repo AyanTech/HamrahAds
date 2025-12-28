@@ -9,13 +9,13 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
-import ir.ayantech.hamrahads.core.RequestBannerAds
-import ir.ayantech.hamrahads.core.ShowBannerAds
-import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
+import ir.ayantech.hamrahads.ads.banner.BannerAdLoader
+import ir.ayantech.hamrahads.ads.banner.BannerAdView
 import ir.ayantech.hamrahads.example.databinding.FragmentBannerBinding
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
-import ir.ayantech.hamrahads.network.model.NetworkError
+import ir.ayantech.hamrahads.model.enums.BannerSize
+import ir.ayantech.hamrahads.model.error.HamrahAdsError
 
 @Keep
 class BannerFragment : Fragment() {
@@ -39,15 +39,15 @@ class BannerFragment : Fragment() {
     }
 
     private fun destroy() {
-        showBannerAds?.destroyAds()
-        requestBanner?.cancelRequest()
+        bannerAdView?.destroyAds()
+        bannerAdLoader?.cancelRequest()
     }
 
-    private var showBannerAds: ShowBannerAds? = null
-    private var requestBanner: RequestBannerAds? = null
+    private var bannerAdView: BannerAdView? = null
+    private var bannerAdLoader: BannerAdLoader? = null
 
     private fun showBannerAds() {
-        requestBanner = HamrahAds.RequestBannerAds()
+        bannerAdLoader = HamrahAds.RequestBannerAds()
             .setContext(requireContext())
             .initId("e17beb85-1b7e-40f1-a312-ab947840590e")
             .initListener(object : RequestListener {
@@ -55,9 +55,9 @@ class BannerFragment : Fragment() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestBannerAds"
 
-                    showBannerAds = HamrahAds.ShowBannerAds()
+                    bannerAdView = HamrahAds.ShowBannerAds()
                         .setContext(requireActivity() as AppCompatActivity)
-                        .setSize(HamrahAdsBannerType.BANNER_320x50)
+                        .setSize(BannerSize.BANNER_320x50)
                         .initId("e17beb85-1b7e-40f1-a312-ab947840590e")
                         .setViewGroup(binding.banner)
                         .initListener(object : ShowListener {
@@ -65,7 +65,7 @@ class BannerFragment : Fragment() {
                                 binding.textStatus.text = "onSuccess ShowBannerAds"
                             }
 
-                            override fun onError(error: NetworkError) {
+                            override fun onError(error: HamrahAdsError) {
                                 binding.textStatus.text =
                                     "onError ShowBannerAds " + error.code + " " + error.type
                             }
@@ -82,7 +82,7 @@ class BannerFragment : Fragment() {
                         }).build()
                 }
 
-                override fun onError(error: NetworkError) {
+                override fun onError(error: HamrahAdsError) {
                     binding.textStatus.text = "onError RequestBannerAds " + error.code + " " + error.type
                 }
             }).build()

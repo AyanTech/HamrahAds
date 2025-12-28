@@ -9,13 +9,12 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
-import ir.ayantech.hamrahads.core.RequestInterstitialAds
-import ir.ayantech.hamrahads.core.ShowInterstitialAds
+import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdView
+import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdLoader
 import ir.ayantech.hamrahads.example.databinding.FragmentInterstitialBinding
-import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
-import ir.ayantech.hamrahads.network.model.NetworkError
+import ir.ayantech.hamrahads.model.error.HamrahAdsError
 
 @Keep
 class InterstitialFragment : Fragment() {
@@ -40,22 +39,22 @@ class InterstitialFragment : Fragment() {
     }
 
     private fun destroy() {
-        showInterstitialAds?.destroyAds()
-        requestInterstitial?.cancelRequest()
+        interstitialAdview?.destroyAds()
+        interstitialAdLoader?.cancelRequest()
     }
 
-    private var showInterstitialAds: ShowInterstitialAds? = null
-    private var requestInterstitial: RequestInterstitialAds? = null
+    private var interstitialAdview: InterstitialAdView? = null
+    private var interstitialAdLoader: InterstitialAdLoader? = null
 
     private fun requestInterstitialAds() {
-        requestInterstitial = HamrahAds.RequestInterstitialAds()
+        interstitialAdLoader = HamrahAds.RequestInterstitialAds()
             .setContext(requireContext())
             .initId("094afc16-54fa-4738-b893-01fdf01ff330")
             .initListener(object : RequestListener {
                 override fun onSuccess() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestInterstitialAds"
-                    showInterstitialAds = HamrahAds.ShowInterstitialAds()
+                    interstitialAdview = HamrahAds.ShowInterstitialAds()
                         .initId("094afc16-54fa-4738-b893-01fdf01ff330")
                         .setContext(requireActivity() as AppCompatActivity)
                         .initListener(object : ShowListener {
@@ -64,7 +63,7 @@ class InterstitialFragment : Fragment() {
                                 binding.textStatus.text = "onSuccess ShowInterstitialAds"
                             }
 
-                            override fun onError(error: NetworkError) {
+                            override fun onError(error: HamrahAdsError) {
                                 binding.textStatus.text =
                                     "onError ShowInterstitialAds " + error.code + " " + error.type
                             }
@@ -85,7 +84,7 @@ class InterstitialFragment : Fragment() {
                         }).build()
                 }
 
-                override fun onError(error: NetworkError) {
+                override fun onError(error: HamrahAdsError) {
                     binding.textStatus.text = "onError RequestInterstitialAds " + error.code + " " + error.type
                 }
             }).build()

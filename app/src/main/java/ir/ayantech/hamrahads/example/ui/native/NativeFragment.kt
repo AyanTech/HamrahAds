@@ -9,13 +9,12 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
-import ir.ayantech.hamrahads.core.RequestNativeAds
-import ir.ayantech.hamrahads.core.ShowNativeAds
+import ir.ayantech.hamrahads.ads.native.NativeAdLoader
+import ir.ayantech.hamrahads.ads.native.NativeAdView
 import ir.ayantech.hamrahads.example.databinding.FragmentNativeBinding
-import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
-import ir.ayantech.hamrahads.network.model.NetworkError
+import ir.ayantech.hamrahads.model.error.HamrahAdsError
 
 @Keep
 class NativeFragment : Fragment() {
@@ -39,15 +38,15 @@ class NativeFragment : Fragment() {
     }
 
     private fun destroy() {
-        showNativeAds?.destroyAds()
-        requestNativeAds?.cancelRequest()
+        nativeAdView?.destroyAds()
+        nativeAdLoader?.cancelRequest()
     }
 
-    private var showNativeAds: ShowNativeAds? = null
-    private var requestNativeAds: RequestNativeAds? = null
+    private var nativeAdView:    NativeAdView? = null
+    private var nativeAdLoader: NativeAdLoader? = null
 
     private fun requestNativeAds() {
-        requestNativeAds = HamrahAds.RequestNativeAds()
+        nativeAdLoader = HamrahAds.RequestNativeAds()
             .setContext(requireActivity())
             .initId("d3f8b412-e4a9-4373-861f-4836dab21939")
             .initListener(object : RequestListener {
@@ -55,7 +54,7 @@ class NativeFragment : Fragment() {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestNativeAds"
 
-                    showNativeAds = HamrahAds.ShowNativeAds()
+                    nativeAdView = HamrahAds.ShowNativeAds()
                         .setContext(requireActivity() as AppCompatActivity)
                         .initId("d3f8b412-e4a9-4373-861f-4836dab21939")
                         .setViewGroup(binding.nativeView)
@@ -66,7 +65,7 @@ class NativeFragment : Fragment() {
                                 binding.textStatus.text = "onSuccess ShowNativeAds"
                             }
 
-                            override fun onError(error: NetworkError) {
+                            override fun onError(error: HamrahAdsError) {
                                 binding.textStatus.text = "onError ShowNativeAds " + error.code + " " + error.type
                             }
 
@@ -81,7 +80,7 @@ class NativeFragment : Fragment() {
                         }).build()
                 }
 
-                override fun onError(error: NetworkError) {
+                override fun onError(error: HamrahAdsError) {
                     binding.textStatus.text = "onError RequestNativeAds " + error.code + " " + error.type
                 }
             }).build()

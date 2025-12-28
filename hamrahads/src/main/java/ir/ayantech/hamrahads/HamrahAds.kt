@@ -3,12 +3,17 @@ package ir.ayantech.hamrahads
 import android.content.Context
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import ir.ayantech.hamrahads.core.Initializer
-import ir.ayantech.hamrahads.core.RequestBannerAds
-import ir.ayantech.hamrahads.domain.enums.HamrahAdsBannerType
+import ir.ayantech.hamrahads.ads.banner.BannerAdLoader
+import ir.ayantech.hamrahads.ads.banner.BannerAdView
+import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdView
+import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdLoader
+import ir.ayantech.hamrahads.ads.native.NativeAdLoader
+import ir.ayantech.hamrahads.ads.native.NativeAdView
+import ir.ayantech.hamrahads.init.HamrahAdsInitializer
 import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
+import ir.ayantech.hamrahads.model.enums.BannerSize
 
 class HamrahAds {
 
@@ -29,13 +34,13 @@ class HamrahAds {
             this.listener = listener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.Initializer? {
+        fun build(): HamrahAdsInitializer? {
             return if (::context.isInitialized &&
                 ::hamrahAdsId.isInitialized &&
                 ::listener.isInitialized &&
                 hamrahAdsId.isNotBlank()
             ) {
-                Initializer(context, hamrahAdsId, listener)
+                HamrahAdsInitializer(context, hamrahAdsId, listener)
             } else {
                 null
             }
@@ -59,13 +64,13 @@ class HamrahAds {
             this.requestListener = requestListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.RequestBannerAds? {
+        fun build(): BannerAdLoader? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
                 ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return RequestBannerAds(context, zoneId, requestListener)
+                BannerAdLoader(context, zoneId, requestListener)
             } else {
                 null
             }
@@ -74,7 +79,7 @@ class HamrahAds {
 
     class ShowBannerAds() {
         private lateinit var activity: AppCompatActivity
-        private lateinit var size: HamrahAdsBannerType
+        private lateinit var size: BannerSize
         private lateinit var zoneId: String
         private var viewGroup: ViewGroup? = null
         private lateinit var showListener: ShowListener
@@ -83,7 +88,7 @@ class HamrahAds {
             this.activity = activity
         }
 
-        fun setSize(size: HamrahAdsBannerType) = apply {
+        fun setSize(size: BannerSize) = apply {
             this.size = size
         }
 
@@ -99,13 +104,13 @@ class HamrahAds {
             this.showListener = showListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.ShowBannerAds? {
+        fun build(): BannerAdView? {
             return if (::activity.isInitialized &&
                 ::showListener.isInitialized &&
                 ::size.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return ir.ayantech.hamrahads.core.ShowBannerAds(
+                BannerAdView(
                     activity,
                     size,
                     zoneId,
@@ -135,17 +140,13 @@ class HamrahAds {
             this.requestListener = requestListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.RequestInterstitialAds? {
+        fun build(): InterstitialAdLoader? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
                 ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return ir.ayantech.hamrahads.core.RequestInterstitialAds(
-                    context,
-                    zoneId,
-                    requestListener
-                )
+                InterstitialAdLoader(context, zoneId, requestListener)
             } else {
                 null
             }
@@ -169,16 +170,12 @@ class HamrahAds {
             this.showListener = showListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.ShowInterstitialAds? {
+        fun build(): InterstitialAdView? {
             return if (::activity.isInitialized &&
                 ::showListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return ir.ayantech.hamrahads.core.ShowInterstitialAds(
-                    activity,
-                    zoneId,
-                    showListener
-                )
+                InterstitialAdView(activity, zoneId, showListener)
             } else {
                 null
             }
@@ -202,17 +199,13 @@ class HamrahAds {
             this.requestListener = requestListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.RequestNativeAds? {
+        fun build(): NativeAdLoader? {
             return if (::context.isInitialized &&
                 ::zoneId.isInitialized &&
                 ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return ir.ayantech.hamrahads.core.RequestNativeAds(
-                    context,
-                    zoneId,
-                    requestListener
-                )
+                NativeAdLoader(context, zoneId, requestListener)
             } else {
                 null
             }
@@ -241,18 +234,13 @@ class HamrahAds {
             this.showListener = showListener
         }
 
-        fun build(): ir.ayantech.hamrahads.core.ShowNativeAds? {
+        fun build(): NativeAdView? {
             return if (::activity.isInitialized &&
                 ::showListener.isInitialized &&
                 ::viewGroup.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                return ir.ayantech.hamrahads.core.ShowNativeAds(
-                    activity,
-                    viewGroup,
-                    zoneId,
-                    showListener
-                )
+                NativeAdView(activity, viewGroup, zoneId, showListener)
             } else {
                 null
             }

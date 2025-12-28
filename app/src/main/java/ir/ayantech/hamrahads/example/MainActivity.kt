@@ -10,7 +10,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import ir.ayantech.hamrahads.HamrahAds
 import ir.ayantech.hamrahads.example.databinding.ActivityMainBinding
 import ir.ayantech.hamrahads.listener.InitListener
-import ir.ayantech.hamrahads.network.model.NetworkError
+import ir.ayantech.hamrahads.model.error.HamrahAdsError
 
 @Keep
 class MainActivity : AppCompatActivity() {
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
                 }
 
-                override fun onError(error: NetworkError) {
+                override fun onError(error: HamrahAdsError) {
 
                 }
             }).build()
