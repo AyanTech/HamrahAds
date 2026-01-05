@@ -13,7 +13,7 @@ fun imageLoader(context: Context): ImageLoader {
                 callFactory = {
                     OkHttpClient.Builder()
                         .retryOnConnectionFailure(true)
-                        .connectTimeout(5, TimeUnit.SECONDS)
+                        .connectTimeout(15, TimeUnit.SECONDS)
                         .readTimeout(30, TimeUnit.SECONDS)
                         .writeTimeout(15, TimeUnit.SECONDS)
                         .callTimeout(30, TimeUnit.SECONDS)

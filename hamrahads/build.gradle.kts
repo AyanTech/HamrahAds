@@ -7,14 +7,14 @@ plugins {
     id("maven-publish")
 }
 
-val hamrahAdsSdkVersion = "0.1.42"
+val hamrahAdsSdkVersion = "0.1.43"
 
 android {
     namespace = "ir.ayantech.hamrahads"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
-        minSdk = 23
+        minSdk = 21
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

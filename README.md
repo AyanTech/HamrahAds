@@ -47,7 +47,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.ayantech:HamrahAds:0.1.42")
+    implementation("com.github.ayantech:HamrahAds:0.1.43")
 }
 ```
 
