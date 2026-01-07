@@ -7,7 +7,7 @@ plugins {
     id("maven-publish")
 }
 
-val hamrahAdsSdkVersion = "0.1.43"
+val hamrahAdsSdkVersion = "0.1.44"
 
 android {
     namespace = "ir.ayantech.hamrahads"
@@ -91,8 +91,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-    implementation(platform(libs.okhttp.bom))
-    implementation(libs.logging.interceptor)
+//    implementation(platform(libs.okhttp.bom))
+//    implementation(libs.logging.interceptor)
     implementation(libs.retrofit)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
