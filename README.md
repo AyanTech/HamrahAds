@@ -367,3 +367,10 @@ val nativeView = HamrahAds.ShowNativeAds()
 
 - قبل از هر Request، حتما Initialization را با AppKey انجام دهید؛ در غیر این‌صورت خطای `G00019` دریافت می‌کنید.
 - نمایش (Show/View) از داده‌های ذخیره‌شده داخلی استفاده می‌کند؛ پس اگر Request موفق نباشد، Show هم خطا می‌دهد.
+
+
+## SDK maintenance and diagnostics
+
+See [architecture and debugging](docs/architecture-migration.md) for layer ownership, lifecycle cleanup, test commands, and the pending Ayan generated-networking compatibility work.
+
+Enable SDK operation diagnostics in a debug host with `HamrahAds.setDebugLoggingEnabled(BuildConfig.DEBUG)` and filter Logcat by `HamrahAds`.
