@@ -16,6 +16,14 @@ import ir.ayantech.hamrahads.listener.ShowListener
 import ir.ayantech.hamrahads.model.enums.BannerSize
 
 class HamrahAds {
+    companion object {
+        /** Opt in to Logcat diagnostics under the HamrahAds tag. Disabled by default. */
+        @JvmStatic
+        fun setDebugLoggingEnabled(enabled: Boolean) {
+            ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.enabled = enabled
+        }
+    }
+
 
     class Initializer {
         private lateinit var context: Context
@@ -42,6 +50,9 @@ class HamrahAds {
             ) {
                 HamrahAdsInitializer(context, hamrahAdsId, listener)
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
@@ -72,6 +83,9 @@ class HamrahAds {
             ) {
                 BannerAdLoader(context, zoneId, requestListener)
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
@@ -119,6 +133,9 @@ class HamrahAds {
                     showListener
                 )
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
@@ -149,6 +166,9 @@ class HamrahAds {
             ) {
                 InterstitialAdLoader(context, zoneId, requestListener)
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
@@ -179,6 +199,9 @@ class HamrahAds {
             ) {
                 InterstitialAdView(activity, zoneId, showListener)
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
@@ -209,6 +232,9 @@ class HamrahAds {
             ) {
                 NativeAdLoader(context, zoneId, requestListener)
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
@@ -245,6 +271,9 @@ class HamrahAds {
             ) {
                 NativeAdView(activity, viewGroup, zoneId, showListener)
             } else {
+                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                    javaClass.simpleName, "missing or invalid builder arguments"
+                )
                 null
             }
         }
