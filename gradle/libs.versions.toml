@@ -1,7 +1,7 @@
 [versions]
-agp = "8.13.2"
+agp = "9.3.0"
 coilNetworkOkhttp = "3.3.0"
-kotlin = "2.2.0"
+kotlin = "2.4.0"
 coreKtx = "1.15.0"
 activity = "1.10.1"
 junit = "4.13.2"
@@ -14,9 +14,6 @@ playServicesAdsIdentifier = "18.2.0"
 retrofit = "3.0.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 kotlinxSerializationJson = "1.9.0"
-kotlinPlugin = "2.2.0"
-kotlinSerializationPlugin = "2.2.0"
-kaptPlugin = "2.2.0"
 okhttpBom = "5.1.0"
 datastorePreferencesVersion = "1.1.7"
 datastoreVersion = "1.1.7"
@@ -27,7 +24,13 @@ navigationFragmentKtx = "2.9.0"
 navigationUiKtx = "2.9.0"
 sdpAndroid = "1.1.1"
 
+coroutines = "1.11.0"
+robolectric = "4.16.1"
+
 [libraries]
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilNetworkOkhttp" }
@@ -64,8 +67,7 @@ sdp-android = { module = "com.intuit.sdp:sdp-android", version.ref = "sdpAndroid
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlinPlugin" }
-kotlin-serialization-plugin = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerializationPlugin" }
-kotlin-kapt-plugin = { id = "org.jetbrains.kotlin.kapt", version.ref = "kaptPlugin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+kotlin-serialization-plugin = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 
