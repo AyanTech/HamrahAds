@@ -1,6 +1,5 @@
 package ir.ayantech.hamrahads.ads.banner
 
-import ir.ayantech.hamrahads.model.error.AdError
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -19,6 +18,7 @@ import ir.ayantech.hamrahads.internal.presentation.VisibleImpressionObserver
 import ir.ayantech.hamrahads.internal.util.handleIntent
 import ir.ayantech.hamrahads.listener.AdDisplayListener
 import ir.ayantech.hamrahads.model.enums.BannerSize
+import ir.ayantech.hamrahads.model.error.AdError
 
 @MainThread
 class BannerAdView(
@@ -31,27 +31,42 @@ class BannerAdView(
     private val session = AdViewSession(firstActivity, listener)
     private val dependencies = AdDependencies.get(firstActivity)
     private val images = AdImages(session)
-    private val tracking = AdTracking(session.tasks, dependencies.trackClick, dependencies.trackImpression,
-        { dependencies.cache.remove(zoneId) }, listener)
+    private val tracking =
+        AdTracking(
+            session.tasks, dependencies.trackClick, dependencies.trackImpression,
+            { dependencies.cache.remove(zoneId) }, listener
+        )
 
     init {
         session.onDispose { viewGroup = null }
         session.tasks.launch("showBanner") {
             val activity = session.activity()
-            if (zoneId.isBlank() || activity == null) { session.fail(AdError.INVALID_REQUEST); return@launch }
+            if (zoneId.isBlank() || activity == null) {
+                session.fail(AdError.INVALID_REQUEST)
+                return@launch
+            }
             val ad = dependencies.cache.getBanner(zoneId)
-            if (ad == null || !ad.isDisplayable(size)) { session.fail(AdError.AD_UNAVAILABLE); return@launch }
+            if (ad == null || !ad.isDisplayable(size)) {
+                session.fail(AdError.AD_UNAVAILABLE)
+                return@launch
+            }
             render(activity, ad)
         }
     }
 
     private fun render(activity: AppCompatActivity, ad: BannerAd) {
         val container = FrameLayout(activity)
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        val params = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
             .apply { if (viewGroup == null) gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL }
         container.layoutParams = params
         val image = AppCompatImageView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
             scaleType = ImageView.ScaleType.FIT_XY
             adjustViewBounds = true
             setOnClickListener {
@@ -72,7 +87,8 @@ class BannerAdView(
             viewGroup?.addView(container) ?: activity.addContentView(container, params)
             listener.onLoaded()
             if (session.isActive) {
-                val observer = VisibleImpressionObserver(image) { tracking.impression(ad.trackers?.impression) }
+                val observer =
+                    VisibleImpressionObserver(image) { tracking.impression(ad.trackers?.impression) }
                 session.onDispose(observer::dispose)
                 observer.start()
             }

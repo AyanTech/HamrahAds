@@ -21,7 +21,12 @@ internal class AdImages(
 ) {
     private val requests = mutableListOf<Disposable>()
 
-    init { session.onDispose { requests.forEach { it.dispose() }; requests.clear() } }
+    init {
+        session.onDispose {
+            requests.forEach { it.dispose() }
+            requests.clear()
+        }
+    }
 
     fun load(url: String?, target: ImageView, transformations: List<Transformation> = emptyList(), onLoaded: () -> Unit = {}): Disposable? {
         val activity = session.activity() ?: return null

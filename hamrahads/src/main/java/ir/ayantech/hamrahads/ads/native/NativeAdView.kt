@@ -30,9 +30,15 @@ class NativeAdView(
     init {
         session.tasks.launch("showNative") {
             val activity = session.activity()
-            if (zoneId.isBlank() || activity == null) { session.fail(AdError.INVALID_REQUEST); return@launch }
+            if (zoneId.isBlank() || activity == null) {
+                session.fail(AdError.INVALID_REQUEST)
+                return@launch
+            }
             val ad = dependencies.cache.getNative(zoneId)
-            if (ad == null || !ad.isDisplayable()) { session.fail(AdError.AD_UNAVAILABLE); return@launch }
+            if (ad == null || !ad.isDisplayable()) {
+                session.fail(AdError.AD_UNAVAILABLE)
+                return@launch
+            }
             NativeAdBinder(session, images).bind(viewGroup, ad) {
                 tracking.click(ad.trackers?.click)
                 handleIntent(activity, ad.landingType, ad.landingLink)

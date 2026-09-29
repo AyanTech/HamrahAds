@@ -8,7 +8,9 @@ import ir.ayantech.hamrahads.listener.AdLoadListener
 class BannerAdLoader(context: Context, zoneId: String, listener: AdLoadListener) {
     private val request = AdRequestRunner(listener)
 
-    init { request.start(context, zoneId, "loadBanner", AdDependencies.get(context).loadBanner::invoke) }
+    init {
+        request.start(context, zoneId, "loadBanner", AdDependencies.get(context).loadBanner::invoke)
+    }
 
     fun cancelRequest() = request.cancel()
 }

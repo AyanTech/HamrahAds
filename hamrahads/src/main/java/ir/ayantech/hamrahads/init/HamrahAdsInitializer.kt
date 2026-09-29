@@ -19,7 +19,10 @@ class HamrahAdsInitializer(context: Context, appKey: String, listener: Initializ
         val application = context.applicationContext
         tasks.launch("initialize") {
             when (val result = AdDependencies.get(application).initialize(appKey)) {
-                is AdResult.Success -> { AdDiagnostics.event("initialize", "succeeded"); listener.onSuccess() }
+                is AdResult.Success -> {
+                    AdDiagnostics.event("initialize", "succeeded")
+                    listener.onSuccess()
+                }
                 is AdResult.Error -> {
                     AdDiagnostics.event("initialize", "failed", result.errorResponse.code)
                     listener.onError(result.errorResponse)
@@ -37,5 +40,8 @@ class HamrahAdsInitializer(context: Context, appKey: String, listener: Initializ
         }
     }
 
-    fun cancelRequest() { tasks.cancel(); locationTasks.cancel() }
+    fun cancelRequest() {
+        tasks.cancel()
+        locationTasks.cancel()
+    }
 }

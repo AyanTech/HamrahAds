@@ -29,11 +29,17 @@ internal class NativeAdBinder(private val session: AdViewSession, private val im
     }
 
     private fun bindClick(view: View, onClick: () -> Unit) {
-        view.setOnClickListener { if (session.isActive) onClick() }
+        view.setOnClickListener {
+            if (session.isActive) {
+                onClick()
+            }
+        }
         session.onDispose { view.setOnClickListener(null) }
     }
 
     private fun bindImage(view: View, url: String?) {
-        if (view is ImageView && !url.isNullOrBlank()) images.load(url, view)
+        if (view is ImageView && !url.isNullOrBlank()) {
+            images.load(url, view)
+        }
     }
 }

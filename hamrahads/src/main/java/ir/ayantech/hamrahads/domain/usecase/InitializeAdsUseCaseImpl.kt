@@ -10,10 +10,16 @@ class InitializeAdsUseCaseImpl(
     private val saveAppKey: suspend (String) -> Unit,
 ) : InitializeAdsUseCase {
     override suspend operator fun invoke(appKey: String): AdResult<Unit> {
-        if (appKey.isBlank()) return AdResult.Error(AdError.MISSING_APP_KEY.toError(ErrorType.Local))
-        if (cachedAppKey() == appKey) return AdResult.Success(Unit)
+        if (appKey.isBlank()) {
+            return AdResult.Error(AdError.MISSING_APP_KEY.toError(ErrorType.Local))
+        }
+        if (cachedAppKey() == appKey) {
+            return AdResult.Success(Unit)
+        }
         return initialize(appKey).also { result ->
-            if (result is AdResult.Success) saveAppKey(appKey)
+            if (result is AdResult.Success) {
+                saveAppKey(appKey)
+            }
         }
     }
 }

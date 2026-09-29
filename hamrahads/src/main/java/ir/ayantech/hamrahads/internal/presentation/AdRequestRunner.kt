@@ -26,7 +26,10 @@ internal class AdRequestRunner(listener: AdLoadListener) {
             }
             val request = withContext(Dispatchers.IO) { DeviceInfo().fetchDeviceInfo(application).toAdRequest(zoneId) }
             when (val result = load(request)) {
-                is AdResult.Success -> { AdDiagnostics.event(operation, "succeeded"); callback.onSuccess() }
+                is AdResult.Success -> {
+                    AdDiagnostics.event(operation, "succeeded")
+                    callback.onSuccess()
+                }
                 is AdResult.Error -> {
                     AdDiagnostics.event(operation, "failed", result.errorResponse.code)
                     callback.onError(result.errorResponse)

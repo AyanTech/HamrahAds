@@ -42,9 +42,15 @@ class InterstitialAdView(
     init {
         session.tasks.launch("showInterstitial") {
             val activity = session.activity()
-            if (zoneId.isBlank() || activity == null) { session.fail(AdError.INVALID_REQUEST); return@launch }
+            if (zoneId.isBlank() || activity == null) {
+                session.fail(AdError.INVALID_REQUEST)
+                return@launch
+            }
             val ad = dependencies.cache.getInterstitial(zoneId)
-            if (ad == null || !ad.isDisplayable()) { session.fail(AdError.AD_UNAVAILABLE); return@launch }
+            if (ad == null || !ad.isDisplayable()) {
+                session.fail(AdError.AD_UNAVAILABLE)
+                return@launch
+            }
             render(activity, ad)
         }
     }
@@ -54,13 +60,18 @@ class InterstitialAdView(
             1 -> createTemplate1(activity, ad)
             2 -> createTemplate2(activity, ad)
             3 -> createTemplate3(activity, ad)
-            else -> { session.fail(AdError.AD_UNAVAILABLE); return }
+            else -> {
+                session.fail(AdError.AD_UNAVAILABLE)
+                return
+            }
         }
         val dialog = createDialog(activity)
         val timers = InterstitialTimers()
         var canClose = (ad.timeToSkip ?: 0) <= 0
         fun close() {
-            if (!session.isActive) return
+            if (!session.isActive) {
+                return
+            }
             session.dispose()
             listener.onClose()
         }
@@ -71,7 +82,11 @@ class InterstitialAdView(
                     handleIntent(activity, ad.landingType, ad.landingLink)
                 }
             },
-            onClose = { if (canClose) close() },
+            onClose = {
+                if (canClose) {
+                    close()
+                }
+            },
         )
         content.root.addView(controls.install)
         content.root.addView(controls.close)
@@ -92,7 +107,9 @@ class InterstitialAdView(
                 if (remainingImages == 0 && session.activity() != null) {
                     dialog.show()
                     controls.countdown.text = activity.getString(R.string.hamrah_ads_end)
-                    if (ad.timeToSkip == null) controls.close.visibility = View.GONE
+                    if (ad.timeToSkip == null) {
+                        controls.close.visibility = View.GONE
+                    }
                     timers.start(ad.timeToSkip,
                         onTick = { controls.countdown.text = activity.getString(R.string.hamrah_ads_second, it.toString()) },
                         onFinish = {
@@ -104,7 +121,9 @@ class InterstitialAdView(
                     timers.start(ad.timeOut, onFinish = ::close)
                     animateButton(controls.install)
                     listener.onLoaded()
-                    if (session.isActive) tracking.impression(ad.trackers?.impression)
+                    if (session.isActive) {
+                        tracking.impression(ad.trackers?.impression)
+                    }
                 }
             }
         }
@@ -131,7 +150,9 @@ class InterstitialAdView(
             repeatCount = 5
             repeatMode = ObjectAnimator.REVERSE
             addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) { view.rotation = 0f }
+                override fun onAnimationEnd(animation: Animator) {
+                    view.rotation = 0f
+                }
             })
         }
         session.onDispose { animator.cancel() }

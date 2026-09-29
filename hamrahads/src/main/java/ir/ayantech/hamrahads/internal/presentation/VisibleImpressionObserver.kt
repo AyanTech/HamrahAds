@@ -13,7 +13,9 @@ internal class VisibleImpressionObserver(
     private var observer: ViewTreeObserver? = null
 
     fun start() {
-        if (disposed) return
+        if (disposed) {
+            return
+        }
         view.addOnAttachStateChangeListener(this)
         observe()
         checkVisibility()
@@ -25,7 +27,9 @@ internal class VisibleImpressionObserver(
     }
 
     private fun checkVisibility() {
-        if (disposed || !view.isShown || view.alpha <= 0f) return
+        if (disposed || !view.isShown || view.alpha <= 0f) {
+            return
+        }
         val visible = Rect()
         if (view.getGlobalVisibleRect(visible) && isSufficientlyVisible(
                 view.width, view.height, visible.width(), visible.height()
@@ -35,15 +39,23 @@ internal class VisibleImpressionObserver(
         }
     }
 
-    override fun onPreDraw(): Boolean { checkVisibility(); return true }
-    override fun onViewAttachedToWindow(v: View) { observe(); checkVisibility() }
+    override fun onPreDraw(): Boolean {
+        checkVisibility()
+        return true
+    }
+    override fun onViewAttachedToWindow(v: View) {
+        observe()
+        checkVisibility()
+    }
     override fun onViewDetachedFromWindow(v: View) {
         observer?.takeIf { it.isAlive }?.removeOnPreDrawListener(this)
         observer = null
     }
 
     fun dispose() {
-        if (disposed) return
+        if (disposed) {
+            return
+        }
         disposed = true
         observer?.takeIf { it.isAlive }?.removeOnPreDrawListener(this)
         observer = null

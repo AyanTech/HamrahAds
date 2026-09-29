@@ -19,18 +19,26 @@ internal class AdViewSession(
     val tasks = AdTaskScope(::fail)
     val isActive: Boolean get() = tasks.isActive
 
-    init { activity.lifecycle.addObserver(this) }
+    init {
+        activity.lifecycle.addObserver(this)
+    }
 
     fun activity(): AppCompatActivity? = activityRef.get()?.takeUnless {
         it.isFinishing || it.isDestroyed || !isActive
     }
 
     fun onDispose(action: () -> Unit) {
-        if (isActive) cleanup += action else action()
+        if (isActive) {
+            cleanup += action
+        } else {
+            action()
+        }
     }
 
     fun fail(error: HamrahAdsError) {
-        if (!isActive) return
+        if (!isActive) {
+            return
+        }
         AdDiagnostics.event("display", "failed", error.code)
         dispose()
         listener.onError(error)
@@ -39,13 +47,17 @@ internal class AdViewSession(
     fun fail(error: AdError) = fail(error.toError())
 
     fun dispose() {
-        if (!isActive) return
+        if (!isActive) {
+            return
+        }
         tasks.cancel()
         activityRef.get()?.lifecycle?.removeObserver(this)
         val actions = cleanup.asReversed().toList()
         cleanup.clear()
         actions.forEach { action ->
-            try { action() } catch (exception: Exception) {
+            try {
+                action()
+            } catch (exception: Exception) {
                 AdDiagnostics.event("dispose", "failed", exception.javaClass.simpleName)
             }
         }

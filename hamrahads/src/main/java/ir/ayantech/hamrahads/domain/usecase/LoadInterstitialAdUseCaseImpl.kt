@@ -13,10 +13,16 @@ class LoadInterstitialAdUseCaseImpl(
 ) : LoadInterstitialAdUseCase {
     override suspend operator fun invoke(request: AdRequest): AdResult<InterstitialAd> {
         val zoneId = request.zoneId
-        if (zoneId.isNullOrBlank()) return AdResult.Error(AdError.INVALID_REQUEST.toError(ErrorType.Local))
-        if (appKey().isBlank()) return AdResult.Error(AdError.MISSING_APP_KEY.toError(ErrorType.Local))
+        if (zoneId.isNullOrBlank()) {
+            return AdResult.Error(AdError.INVALID_REQUEST.toError(ErrorType.Local))
+        }
+        if (appKey().isBlank()) {
+            return AdResult.Error(AdError.MISSING_APP_KEY.toError(ErrorType.Local))
+        }
         return fetch(request).also { result ->
-            if (result is AdResult.Success) cache(zoneId, result.data)
+            if (result is AdResult.Success) {
+                cache(zoneId, result.data)
+            }
         }
     }
 }

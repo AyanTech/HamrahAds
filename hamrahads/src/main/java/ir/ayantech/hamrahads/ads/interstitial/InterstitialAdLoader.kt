@@ -8,7 +8,9 @@ import ir.ayantech.hamrahads.listener.AdLoadListener
 class InterstitialAdLoader(context: Context, zoneId: String, listener: AdLoadListener) {
     private val request = AdRequestRunner(listener)
 
-    init { request.start(context, zoneId, "loadInterstitial", AdDependencies.get(context).loadInterstitial::invoke) }
+    init {
+        request.start(context, zoneId, "loadInterstitial", AdDependencies.get(context).loadInterstitial::invoke)
+    }
 
     fun cancelRequest() = request.cancel()
 }
