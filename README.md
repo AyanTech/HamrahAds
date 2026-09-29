@@ -47,7 +47,7 @@ In your app module’s `build.gradle` or `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.ayantech:HamrahAds:0.1.44")
+    implementation("com.github.ayantech:HamrahAds:LATEST_VERSION")
 }
 ```
 
