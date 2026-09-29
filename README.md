@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/AyanTech/HamrahAds.svg)](https://jitpack.io/#AyanTech/HamrahAds)
+
 # HamrahAds SDK (Android)
 
 HamrahAds is an Android advertising SDK for Kotlin and Java, with support for **banner**, **interstitial**, and **native** ads.
