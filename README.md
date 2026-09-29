@@ -1,21 +1,21 @@
 # HamrahAds SDK (Android)
 
-ا SDK تبلیغات HamrahAds برای اندروید (Kotlin/Java) با پشتیبانی از **بنر**، **بینابینی (Interstitial)** و **نیتیو (Native)**.
+HamrahAds is an Android advertising SDK for Kotlin and Java, with support for **banner**, **interstitial**, and **native** ads.
 
 ---
 
-## پیش‌نیازها
+## Requirements
 
-- حداقل نسخه اندروید: **API 21**
-- پیشنهاد: Android Gradle Plugin و Kotlin به‌روز
+- Minimum Android version: **API 21**.
+- An Android project configured with Gradle. The examples below use Kotlin.
 
 ---
 
-## نصب
+## Installation
 
-### 1) اضافه کردن ریپازیتوری JitPack
+### 1. Add the JitPack repository
 
-در فایل `settings.gradle` یا `build.gradle` (سطح پروژه)، ریپازیتوری JitPack را اضافه کنید:
+Add JitPack to the dependency repositories in your project settings:
 
 **Gradle (Groovy)**
 
@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 }
 ```
 
-### 2) اضافه کردن dependency
+### 2. Add the dependency
 
-در `build.gradle` ماژول اپ:
+In your app module’s `build.gradle` or `build.gradle.kts`:
 
 ```kotlin
 dependencies {
@@ -53,19 +53,21 @@ dependencies {
 
 ---
 
-## شروع سریع (Quick Start)
+## Quick start
 
-روال کلی SDK به این شکل است:
+Use the SDK in this order:
 
-1) یک‌بار در شروع اپ، SDK را با **AppKey** مقداردهی اولیه کنید.  
-2) برای هر Zone، ابتدا **Request** بزنید (دریافت آگهی و ذخیره داخلی).  
-3) بعد از موفقیت Request، **Show/View** را اجرا کنید.
+1. Initialize the SDK with your **app key** when the app starts.
+2. Wait for initialization to succeed, then **request** an ad for a zone. The SDK caches the returned ad.
+3. After the request succeeds, **show** the ad using the same zone ID.
+
+The Fragment examples assume an `AppCompatActivity` host and View Binding fields for the ad containers. Builders return `null` when required arguments are missing or invalid.
 
 ---
 
-## مقداردهی اولیه (Initialization)
+## Initialization
 
-این مرحله AppKey را ذخیره می‌کند و برای Requestها لازم است.
+Successful initialization stores the app key used by subsequent ad requests.
 
 ```kotlin
 import ir.ayantech.hamrahads.HamrahAds
@@ -77,11 +79,11 @@ HamrahAds.Initializer()
     .initId("YOUR_APP_KEY")
     .initListener(object : InitListener {
         override fun onSuccess() {
-            // آماده استفاده
+            // The SDK is ready to load ads.
         }
 
         override fun onError(error: HamrahAdsError) {
-            // خطا در init
+            // Handle initialization failure.
         }
     })
     .build()
@@ -89,9 +91,9 @@ HamrahAds.Initializer()
 
 ---
 
-## بنر (Banner)
+## Banner ads
 
-### 1) Request بنر
+### 1. Request a banner
 
 ```kotlin
 import ir.ayantech.hamrahads.HamrahAds
@@ -103,22 +105,22 @@ val request = HamrahAds.RequestBannerAds()
     .initId("YOUR_BANNER_ZONE_ID")
     .initListener(object : RequestListener {
         override fun onSuccess() {
-            // حالا می‌تونید بنر رو نمایش بدید
+            // Show the banner using the same zone ID.
         }
 
         override fun onError(error: HamrahAdsError) {
-            // خطا در دریافت بنر
+            // Handle banner loading failure.
         }
     })
     .build()
 
-// در صورت نیاز:
+// Cancel when the owning screen is destroyed:
 // request?.cancelRequest()
 ```
 
-### 2) نمایش بنر
+### 2. Show the banner
 
-اگر `ViewGroup` بدهید بنر داخل همان اضافه می‌شود؛ اگر `ViewGroup` ندهید، بنر به صورت پیش‌فرض پایین صفحه به Activity اضافه می‌شود.
+Pass a `ViewGroup` to display the banner inside that container. If omitted, the SDK adds the banner at the bottom of the activity.
 
 ```kotlin
 import androidx.appcompat.app.AppCompatActivity
@@ -131,7 +133,7 @@ val bannerView = HamrahAds.ShowBannerAds()
     .setContext(requireActivity() as AppCompatActivity)
     .setSize(BannerSize.BANNER_320x50)
     .initId("YOUR_BANNER_ZONE_ID")
-    .setViewGroup(binding.bannerContainer) // اختیاری
+    .setViewGroup(binding.bannerContainer) // Optional
     .initListener(object : ShowListener {
         override fun onLoaded() {}
         override fun onDisplayed() {}
@@ -139,20 +141,20 @@ val bannerView = HamrahAds.ShowBannerAds()
         override fun onClose() {}
 
         override fun onError(error: HamrahAdsError) {
-            // خطا در نمایش بنر
+            // Handle banner display failure.
         }
     })
     .build()
 
-// در onDestroy/onDestroyView:
+// In onDestroy() or onDestroyView():
 // bannerView?.destroyAds()
 ```
 
 ---
 
-## بینابینی (Interstitial)
+## Interstitial ads
 
-### 1) Request بینابینی
+### 1. Request an interstitial
 
 ```kotlin
 import ir.ayantech.hamrahads.HamrahAds
@@ -164,11 +166,11 @@ val request = HamrahAds.RequestInterstitialAds()
     .initId("YOUR_INTERSTITIAL_ZONE_ID")
     .initListener(object : RequestListener {
         override fun onSuccess() {
-            // آماده نمایش
+            // Show the interstitial using the same zone ID.
         }
 
         override fun onError(error: HamrahAdsError) {
-            // خطا در دریافت
+            // Handle ad loading failure.
         }
     })
     .build()
@@ -176,9 +178,9 @@ val request = HamrahAds.RequestInterstitialAds()
 // request?.cancelRequest()
 ```
 
-### 2) نمایش بینابینی
+### 2. Show the interstitial
 
-نمایش بینابینی به صورت تمام‌صفحه انجام می‌شود.
+Interstitial ads appear in a full-screen dialog.
 
 ```kotlin
 import androidx.appcompat.app.AppCompatActivity
@@ -196,34 +198,35 @@ val interstitialView = HamrahAds.ShowInterstitialAds()
         override fun onClose() {}
 
         override fun onError(error: HamrahAdsError) {
-            // خطا در نمایش
+            // Handle ad display failure.
         }
     })
     .build()
 
-// در onDestroy/onDestroyView:
+// In onDestroy() or onDestroyView():
 // interstitialView?.destroyAds()
 ```
 
 ---
 
-## نیتیو (Native)
+## Native ads
 
-### 1) آماده‌سازی Layout نیتیو
+### 1. Prepare the native ad layout
 
-در ViewGroup‌ای که به SDK می‌دهید، SDK به دنبال این IDها می‌گردد و آن‌ها را پر می‌کند:
+The SDK searches the supplied `ViewGroup` for these IDs and binds the corresponding ad content:
 
 - `hamrah_ad_native_title`
 - `hamrah_ad_native_description`
 - `hamrah_ad_native_cta`
 - `hamrah_ad_native_logo`
 - `hamrah_ad_native_banner`
-- `hamrah_ad_native_cta_view` (اختیاری؛ یک لایه کلیک‌گیر)
+- `hamrah_ad_native_cta_view` (optional clickable container)
 
-نمونه‌ی ساده:
+Example layout:
 
 ```xml
 <androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/nativeContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -268,7 +271,7 @@ val interstitialView = HamrahAds.ShowInterstitialAds()
 </androidx.cardview.widget.CardView>
 ```
 
-### 2) Request نیتیو
+### 2. Request a native ad
 
 ```kotlin
 import ir.ayantech.hamrahads.HamrahAds
@@ -287,7 +290,7 @@ val request = HamrahAds.RequestNativeAds()
 // request?.cancelRequest()
 ```
 
-### 3) نمایش نیتیو
+### 3. Show the native ad
 
 ```kotlin
 import androidx.appcompat.app.AppCompatActivity
@@ -308,54 +311,55 @@ val nativeView = HamrahAds.ShowNativeAds()
     })
     .build()
 
-// در onDestroy/onDestroyView:
+// In onDestroy() or onDestroyView():
 // nativeView?.destroyAds()
 ```
 
 ---
 
-## مدیریت Lifecycle و پاکسازی
+## Lifecycle and cleanup
 
-برای جلوگیری از نشت حافظه:
+Keep references to the returned initializer, loaders, and ad views so you can release their work:
 
-- برای Requestها از `cancelRequest()` در `onDestroy/onDestroyView` استفاده کنید.
-- برای Viewها از `destroyAds()` در `onDestroy/onDestroyView` استفاده کنید.
+- Call `cancelRequest()` on initializers and loaders when their owner is destroyed.
+- Call `destroyAds()` on ad views in a Fragment’s `onDestroyView()` or an Activity’s `onDestroy()`. Activity destruction also triggers automatic display cleanup.
+- Create and destroy ad views on the main thread. SDK listener callbacks run on the main dispatcher.
 
 ---
 
-## خطاها (HamrahAdsError)
+## Errors (`HamrahAdsError`)
 
-در همه Callbackها، خطا از نوع `HamrahAdsError` برمی‌گردد:
+Error callbacks receive a `HamrahAdsError` with these fields:
 
-- `code`: کد خطا (مثل `G00019`)
-- `description`: توضیح خطا
-- `type`: نوع خطا (`Local` یا `Remote`)
+- `code`: the error code, such as `G00019`.
+- `description`: a description of the failure.
+- `type`: the error category (`Local` or `Remote`).
 
-کدهای عمومی موجود:
+Built-in error codes:
 
-| شناسه داخلی | کد | توضیح |
+| Internal ID | Code | Description |
 |---:|---|---|
-| 0 | G00010 | اطلاعات وارد شده کامل نیست |
-| 1 | G00011 | بدنه پاسخ (body) خالی است |
-| 2 | G00012 | بدنه خطا (error body) خالی است |
-| 3 | G00013 | خطا در تبدیل پاسخ خطا |
-| 4 | G00014 | خطا در درخواست شبکه |
-| 5 | G00015 | دانلود تصویر تبلیغ ناموفق بود |
-| 6 | G00017 | اطلاعات تبلیغ موجود نیست |
-| 7 | G00018 | نمایش وب دچار مشکل شد |
-| 8 | G00019 | AppKey خالی است |
+| 0 | G00010 | Required input is missing or invalid |
+| 1 | G00011 | The response body is empty |
+| 2 | G00012 | The error response body is empty |
+| 3 | G00013 | The error response could not be decoded |
+| 4 | G00014 | The request failed |
+| 5 | G00015 | The ad image failed to load |
+| 6 | G00017 | Ad data is unavailable or incomplete |
+| 7 | G00018 | Web content could not be displayed |
+| 8 | G00019 | The app key is missing |
 
 ---
 
-## مجوزها (Permissions)
+## Permissions
 
-این SDK به صورت پیش‌فرض در Manifest خودش موارد زیر را اضافه می‌کند:
+The SDK declares these permissions in its manifest:
 
 - `INTERNET`
 - `ACCESS_WIFI_STATE`
 - `com.google.android.gms.permission.AD_ID`
 
-اگر می‌خواهید SDK موقعیت مکانی را هم استفاده کند، در اپ خودتان این مجوز را اضافه کنید:
+To allow optional location collection, declare this permission in your app and obtain the required runtime permission before initialization:
 
 ```xml
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -363,7 +367,13 @@ val nativeView = HamrahAds.ShowNativeAds()
 
 ---
 
-## نکات مهم
+## Usage notes
 
-- قبل از هر Request، حتما Initialization را با AppKey انجام دهید؛ در غیر این‌صورت خطای `G00019` دریافت می‌کنید.
-- نمایش (Show/View) از داده‌های ذخیره‌شده داخلی استفاده می‌کند؛ پس اگر Request موفق نباشد، Show هم خطا می‌دهد.
+- Complete initialization before requesting ads. Requests without an app key fail with `G00019`.
+- Display APIs read cached ad data. A successful request for the same zone must precede display.
+- SDK-owned controls use Persian text only. The SDK does not change the host app’s locale; server-provided ad text is displayed as received.
+
+
+## SDK maintenance and diagnostics
+
+Enable SDK operation diagnostics in a debug host with `HamrahAds.setDebugLoggingEnabled(BuildConfig.DEBUG)` and filter Logcat by `HamrahAds`.

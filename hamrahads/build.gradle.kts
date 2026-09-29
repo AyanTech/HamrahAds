@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
-    alias(libs.plugins.kotlin.kapt.plugin)
     alias(libs.plugins.kotlin.serialization.plugin)
     id("maven-publish")
 }
@@ -21,6 +19,8 @@ android {
 
         buildConfigField("String", "HAMRAHADS_SDK_VERSION", "\"$hamrahAdsSdkVersion\"")
     }
+
+    testOptions { unitTests.isIncludeAndroidResources = true }
 
     buildFeatures {
         buildConfig = true
@@ -52,27 +52,6 @@ android {
     }
 }
 
-val cleanDebugLibraryClassesJar by tasks.registering {
-    doLast {
-        val jarFile = layout.buildDirectory.file(
-            "intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar"
-        ).get().asFile
-        if (!jarFile.exists()) return@doLast
-
-        repeat(30) {
-            runCatching {
-                jarFile.delete()
-            }
-            if (!jarFile.exists()) return@doLast
-            Thread.sleep(200)
-        }
-    }
-}
-
-tasks.matching { it.name == "bundleLibCompileToJarDebug" }.configureEach {
-    dependsOn(cleanDebugLibraryClassesJar)
-}
-
 afterEvaluate {
     publishing {
         publications {
@@ -88,11 +67,13 @@ afterEvaluate {
 
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.android)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-//    implementation(platform(libs.okhttp.bom))
-//    implementation(libs.logging.interceptor)
     implementation(libs.retrofit)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit2.kotlinx.serialization.converter)

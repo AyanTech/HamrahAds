@@ -6,7 +6,14 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
-fun imageLoader(context: Context): ImageLoader {
+@Volatile private var sharedImageLoader: ImageLoader? = null
+private val imageLoaderLock = Any()
+
+fun imageLoader(context: Context): ImageLoader = sharedImageLoader ?: synchronized(imageLoaderLock) {
+    sharedImageLoader ?: createImageLoader(context.applicationContext).also { sharedImageLoader = it }
+}
+
+private fun createImageLoader(context: Context): ImageLoader {
     return ImageLoader.Builder(context)
         .components {
             OkHttpNetworkFetcherFactory(

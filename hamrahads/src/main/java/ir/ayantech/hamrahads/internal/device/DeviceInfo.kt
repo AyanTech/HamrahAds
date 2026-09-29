@@ -7,12 +7,12 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.telephony.TelephonyManager
-import android.webkit.WebView
+import android.webkit.WebSettings
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import ir.ayantech.hamrahads.BuildConfig
-import ir.ayantech.hamrahads.internal.storage.PreferenceDataStoreConstants
-import ir.ayantech.hamrahads.internal.storage.PreferenceDataStoreHelper
+import ir.ayantech.hamrahads.data.storage.PreferenceDataStoreConstants
+import ir.ayantech.hamrahads.data.storage.PreferenceDataStoreHelper
 import ir.ayantech.hamrahads.model.enums.Brand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -122,7 +122,7 @@ data class DeviceInfo(
 
         this.ua = withContext(Dispatchers.Main) {
             try {
-                WebView(context).settings.userAgentString
+                WebSettings.getDefaultUserAgent(context)
             } catch (e: IllegalArgumentException) {
                 null
             }
@@ -131,6 +131,8 @@ data class DeviceInfo(
         this.ifa = withContext(Dispatchers.IO) {
             try {
                 AdvertisingIdClient.getAdvertisingIdInfo(context).id.toString()
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 null
             }
@@ -212,6 +214,8 @@ data class DeviceInfo(
         val hashBytes = digest.digest(input.toByteArray())
         return hashBytes.joinToString("") { "%02x".format(it) }
     }
+
+    suspend fun fetchDeviceInfo(context: Context): DeviceInfo = fillFields(context)
 
     fun fetchDeviceInfo(context: Context, callback: (DeviceInfo) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {

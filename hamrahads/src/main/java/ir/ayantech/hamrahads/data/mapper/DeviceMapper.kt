@@ -1,0 +1,56 @@
+package ir.ayantech.hamrahads.data.mapper
+
+import ir.ayantech.hamrahads.domain.model.AdRequest
+import ir.ayantech.hamrahads.internal.device.DeviceInfo
+
+internal fun DeviceInfo.toAdRequest(zoneId: String) = AdRequest(
+    zoneId = zoneId,
+    ua = ua,
+    pkg = pkg,
+    ver = ver,
+    appVer = appVer,
+    os = os,
+    osVer = osVer,
+    brand = brand,
+    model = model,
+    width = width,
+    height = height,
+    ifa = ifa,
+    country = country,
+    city = city,
+    macSha1 = macSha1,
+    network = network,
+    operator = operator,
+    geoType = geoType,
+    lat = lat,
+    lon = lon,
+    utcOffset = utcOffset,
+    region = region,
+    gdprConsent = gdprConsent,
+)
+
+internal fun AdRequest.toDeviceInfo() = DeviceInfo(
+    zoneId = zoneId,
+    ua = ua,
+    pkg = pkg,
+    ver = ver,
+    appVer = appVer,
+    os = os,
+    osVer = osVer,
+    brand = brand,
+    model = model,
+    width = width,
+    height = height,
+    ifa = ifa,
+    country = country,
+    city = city,
+    macSha1 = macSha1,
+    network = network,
+    operator = operator,
+    geoType = geoType,
+    lat = lat,
+    lon = lon,
+    utcOffset = utcOffset,
+    region = region,
+    gdprConsent = gdprConsent,
+)
