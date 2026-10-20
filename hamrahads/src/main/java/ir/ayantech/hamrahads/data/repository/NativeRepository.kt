@@ -1,11 +1,11 @@
 package ir.ayantech.hamrahads.data.repository
 
-import ir.ayantech.hamrahads.internal.device.DeviceInfo
 import ir.ayantech.hamrahads.data.dto.ApiResponseDto
 import ir.ayantech.hamrahads.data.dto.NativeAdDto
 import ir.ayantech.hamrahads.data.network.NetworkClient
 import ir.ayantech.hamrahads.data.network.NetworkDataFetcher
 import ir.ayantech.hamrahads.data.network.NetworkResult
+import ir.ayantech.hamrahads.internal.device.DeviceInfo
 
 class NativeRepository(private val networkClient: NetworkClient) {
 
@@ -40,6 +40,7 @@ class NativeRepository(private val networkClient: NetworkClient) {
             )
         }
     }
+
     suspend fun click(
         url: String
     ): NetworkResult<ApiResponseDto> {

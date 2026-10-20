@@ -7,10 +7,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
+import com.intuit.sdp.R as SdpR
 import ir.ayantech.hamrahads.R
 import ir.ayantech.hamrahads.domain.model.InterstitialAd
 
-internal fun createTemplate3(activity: AppCompatActivity, interstitial: InterstitialAd): InterstitialContent {
+internal fun createTemplate3(
+    activity: AppCompatActivity,
+    interstitial: InterstitialAd
+): InterstitialContent {
     val resources = activity.resources
     val container = FrameLayout(activity).apply {
         layoutParams = FrameLayout.LayoutParams(
@@ -26,7 +30,7 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
             FrameLayout.LayoutParams.WRAP_CONTENT,
         ).apply {
             gravity = Gravity.TOP
-            topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._150sdp)
+            topMargin = resources.getDimensionPixelSize(SdpR.dimen._150sdp)
         }
         scaleType = ImageView.ScaleType.FIT_XY
         adjustViewBounds = true
@@ -34,12 +38,12 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
 
     val iconImageView = ImageView(activity).apply {
         layoutParams = FrameLayout.LayoutParams(
-            resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._80sdp),
-            resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._80sdp)
+            resources.getDimensionPixelSize(SdpR.dimen._80sdp),
+            resources.getDimensionPixelSize(SdpR.dimen._80sdp)
         ).apply {
             gravity = Gravity.RIGHT
-            rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-            topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._55sdp)
+            rightMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
+            topMargin = resources.getDimensionPixelSize(SdpR.dimen._55sdp)
         }
         scaleType = ImageView.ScaleType.FIT_XY
     }
@@ -51,10 +55,10 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
         ).apply {
             setTextColor(Color.BLACK)
             gravity = Gravity.RIGHT
-            rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._110sdp)
-            leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-            topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._85sdp)
-            textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+            rightMargin = resources.getDimensionPixelSize(SdpR.dimen._110sdp)
+            leftMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
+            topMargin = resources.getDimensionPixelSize(SdpR.dimen._85sdp)
+            textSize = resources.getDimension(SdpR.dimen._6sdp)
             typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
             text = interstitial.interstitialLabel
         }
@@ -68,10 +72,10 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
         ).apply {
             setTextColor(Color.GRAY)
             gravity = Gravity.RIGHT
-            rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._110sdp)
-            leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-            topMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._110sdp)
-            textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
+            rightMargin = resources.getDimensionPixelSize(SdpR.dimen._110sdp)
+            leftMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
+            topMargin = resources.getDimensionPixelSize(SdpR.dimen._110sdp)
+            textSize = resources.getDimension(SdpR.dimen._4sdp)
             typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
             text = interstitial.webTemplateUrl
         }
@@ -84,10 +88,10 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
             FrameLayout.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.BOTTOM
-            bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._175sdp)
-            rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-            leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-            textSize = resources.getDimension(com.intuit.sdp.R.dimen._6sdp)
+            bottomMargin = resources.getDimensionPixelSize(SdpR.dimen._175sdp)
+            rightMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
+            leftMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
+            textSize = resources.getDimension(SdpR.dimen._6sdp)
             setTextColor(Color.BLACK)
             typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.medium)
             text = interstitial.caption
@@ -101,10 +105,10 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
             FrameLayout.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.BOTTOM
-            bottomMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._155sdp)
-            textSize = resources.getDimension(com.intuit.sdp.R.dimen._4sdp)
-            rightMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
-            leftMargin = resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._15sdp)
+            bottomMargin = resources.getDimensionPixelSize(SdpR.dimen._155sdp)
+            textSize = resources.getDimension(SdpR.dimen._4sdp)
+            rightMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
+            leftMargin = resources.getDimensionPixelSize(SdpR.dimen._15sdp)
             setTextColor(Color.BLACK)
             typeface = ResourcesCompat.getFont(activity.applicationContext, R.font.regular)
             text = interstitial.description
@@ -118,8 +122,10 @@ internal fun createTemplate3(activity: AppCompatActivity, interstitial: Intersti
     container.addView(webUrlTextView)
     container.addView(titleTextView)
     container.addView(descriptionTextView)
-    return InterstitialContent(container, listOf(
+    return InterstitialContent(
+        container, listOf(
             AdImage(backgroundImageView, interstitial.interstitialBanner),
             AdImage(iconImageView, interstitial.logo),
-    ))
+        )
+    )
 }

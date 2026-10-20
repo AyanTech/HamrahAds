@@ -3,13 +3,21 @@ package ir.ayantech.hamrahads
 import android.content.Context
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LifecycleOwner
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.ads.banner.BannerAdLoader
 import ir.ayantech.hamrahads.ads.banner.BannerAdView
-import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdView
 import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdLoader
+import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdView
 import ir.ayantech.hamrahads.ads.native.NativeAdLoader
 import ir.ayantech.hamrahads.ads.native.NativeAdView
+import ir.ayantech.hamrahads.di.AdDependencies
+import ir.ayantech.hamrahads.domain.model.AdResult
+import ir.ayantech.hamrahads.domain.model.BannerAd
+import ir.ayantech.hamrahads.domain.model.InterstitialAd
+import ir.ayantech.hamrahads.domain.model.NativeAd
 import ir.ayantech.hamrahads.init.HamrahAdsInitializer
+import ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics
 import ir.ayantech.hamrahads.listener.InitListener
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
@@ -17,10 +25,29 @@ import ir.ayantech.hamrahads.model.enums.BannerSize
 
 class HamrahAds {
     companion object {
+        /** Cancellable preparation with no Activity, view, or persistent creative storage. */
+        suspend fun loadNative(context: Context, zoneId: String): AdResult<LoadedAd<NativeAd>> {
+            val dependencies = AdDependencies.get(context)
+            return dependencies.load(zoneId, dependencies.loadNative::invoke)
+        }
+
+        suspend fun loadBanner(context: Context, zoneId: String): AdResult<LoadedAd<BannerAd>> {
+            val dependencies = AdDependencies.get(context)
+            return dependencies.load(zoneId, dependencies.loadBanner::invoke)
+        }
+
+        suspend fun loadInterstitial(
+            context: Context,
+            zoneId: String
+        ): AdResult<LoadedAd<InterstitialAd>> {
+            val dependencies = AdDependencies.get(context)
+            return dependencies.load(zoneId, dependencies.loadInterstitial::invoke)
+        }
+
         /** Opt in to Logcat diagnostics under the HamrahAds tag. Disabled by default. */
         @JvmStatic
         fun setDebugLoggingEnabled(enabled: Boolean) {
-            ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.enabled = enabled
+            AdDiagnostics.enabled = enabled
         }
     }
 
@@ -50,7 +77,7 @@ class HamrahAds {
             ) {
                 HamrahAdsInitializer(context, hamrahAdsId, listener)
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null
@@ -59,6 +86,8 @@ class HamrahAds {
     }
 
     class RequestBannerAds {
+        private var lifecycleOwner: LifecycleOwner? = null
+        fun setLifecycleOwner(owner: LifecycleOwner) = apply { lifecycleOwner = owner }
         private lateinit var context: Context
         private lateinit var zoneId: String
         private lateinit var requestListener: RequestListener
@@ -81,9 +110,9 @@ class HamrahAds {
                 ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                BannerAdLoader(context, zoneId, requestListener)
+                BannerAdLoader(context, zoneId, requestListener, lifecycleOwner)
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null
@@ -92,6 +121,12 @@ class HamrahAds {
     }
 
     class ShowBannerAds() {
+        private var lifecycleOwner: LifecycleOwner? = null
+        private var loadedAd: LoadedAd<BannerAd>? = null
+
+        fun setLifecycleOwner(owner: LifecycleOwner) = apply { lifecycleOwner = owner }
+        fun setAd(ad: LoadedAd<BannerAd>) = apply { loadedAd = ad; zoneId = ad.zoneId }
+
         private lateinit var activity: AppCompatActivity
         private lateinit var size: BannerSize
         private lateinit var zoneId: String
@@ -130,10 +165,10 @@ class HamrahAds {
                     size,
                     zoneId,
                     viewGroup,
-                    showListener
+                    showListener, loadedAd, lifecycleOwner ?: activity
                 )
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null
@@ -142,6 +177,8 @@ class HamrahAds {
     }
 
     class RequestInterstitialAds {
+        private var lifecycleOwner: LifecycleOwner? = null
+        fun setLifecycleOwner(owner: LifecycleOwner) = apply { lifecycleOwner = owner }
         private lateinit var context: Context
         private lateinit var zoneId: String
         private lateinit var requestListener: RequestListener
@@ -164,9 +201,9 @@ class HamrahAds {
                 ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                InterstitialAdLoader(context, zoneId, requestListener)
+                InterstitialAdLoader(context, zoneId, requestListener, lifecycleOwner)
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null
@@ -175,6 +212,12 @@ class HamrahAds {
     }
 
     class ShowInterstitialAds {
+        private var lifecycleOwner: LifecycleOwner? = null
+        private var loadedAd: LoadedAd<InterstitialAd>? = null
+
+        fun setLifecycleOwner(owner: LifecycleOwner) = apply { lifecycleOwner = owner }
+        fun setAd(ad: LoadedAd<InterstitialAd>) = apply { loadedAd = ad; zoneId = ad.zoneId }
+
         private lateinit var activity: AppCompatActivity
         private lateinit var zoneId: String
         private lateinit var showListener: ShowListener
@@ -197,9 +240,15 @@ class HamrahAds {
                 ::showListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                InterstitialAdView(activity, zoneId, showListener)
+                InterstitialAdView(
+                    activity,
+                    zoneId,
+                    showListener,
+                    loadedAd,
+                    lifecycleOwner ?: activity
+                )
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null
@@ -208,6 +257,8 @@ class HamrahAds {
     }
 
     class RequestNativeAds {
+        private var lifecycleOwner: LifecycleOwner? = null
+        fun setLifecycleOwner(owner: LifecycleOwner) = apply { lifecycleOwner = owner }
         private lateinit var context: Context
         private lateinit var zoneId: String
         private lateinit var requestListener: RequestListener
@@ -230,9 +281,9 @@ class HamrahAds {
                 ::requestListener.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                NativeAdLoader(context, zoneId, requestListener)
+                NativeAdLoader(context, zoneId, requestListener, lifecycleOwner)
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null
@@ -241,6 +292,12 @@ class HamrahAds {
     }
 
     class ShowNativeAds {
+        private var lifecycleOwner: LifecycleOwner? = null
+        private var loadedAd: LoadedAd<NativeAd>? = null
+
+        fun setLifecycleOwner(owner: LifecycleOwner) = apply { lifecycleOwner = owner }
+        fun setAd(ad: LoadedAd<NativeAd>) = apply { loadedAd = ad; zoneId = ad.zoneId }
+
         private lateinit var activity: AppCompatActivity
         private lateinit var zoneId: String
         private lateinit var viewGroup: ViewGroup
@@ -269,9 +326,16 @@ class HamrahAds {
                 ::viewGroup.isInitialized &&
                 zoneId.isNotBlank()
             ) {
-                NativeAdView(activity, viewGroup, zoneId, showListener)
+                NativeAdView(
+                    activity,
+                    viewGroup,
+                    zoneId,
+                    showListener,
+                    loadedAd,
+                    lifecycleOwner ?: activity
+                )
             } else {
-                ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event(
+                AdDiagnostics.event(
                     javaClass.simpleName, "missing or invalid builder arguments"
                 )
                 null

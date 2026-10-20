@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 
-
 fun handleIntent(context: Context, type: Int?, data: String?) {
 
     val intent: Intent? = when (type) {

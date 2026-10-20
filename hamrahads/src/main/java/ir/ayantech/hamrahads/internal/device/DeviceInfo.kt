@@ -14,17 +14,21 @@ import ir.ayantech.hamrahads.BuildConfig
 import ir.ayantech.hamrahads.data.storage.PreferenceDataStoreConstants
 import ir.ayantech.hamrahads.data.storage.PreferenceDataStoreHelper
 import ir.ayantech.hamrahads.model.enums.Brand
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import java.security.MessageDigest
 import java.util.Calendar
 import java.util.TimeZone
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@OptIn(kotlinx.serialization.InternalSerializationApi::class)
+@OptIn(InternalSerializationApi::class)
 @Serializable
 data class DeviceInfo(
 
@@ -97,6 +101,12 @@ data class DeviceInfo(
     @SerialName("gdpr_consent")
     var gdprConsent: String? = null,
 ) {
+    companion object {
+        private val userAgentMutex = Mutex()
+        private var userAgentResolved = false
+        private var userAgent: String? = null
+    }
+
     private suspend fun fillFields(context: Context): DeviceInfo {
         this.appVer = getAppVersionCode(context).toInt()
         this.os = "android"
@@ -107,7 +117,7 @@ data class DeviceInfo(
         } catch (e: IllegalArgumentException) {
             this.brand = Brand.other
         }
-        this.model =  getMyModel()
+        this.model = getMyModel()
         this.width = DeviceUtils.getDisplayMetrics(
             context,
             DeviceUtils.DisplayMetric.WIDTH_PIXEL
@@ -120,24 +130,31 @@ data class DeviceInfo(
 
         this.operator = getCarrierName(context)
 
-        this.ua = withContext(Dispatchers.Main) {
-            try {
-                WebSettings.getDefaultUserAgent(context)
-            } catch (e: IllegalArgumentException) {
-                null
+        this.ua = userAgentMutex.withLock {
+            if (!userAgentResolved) {
+                userAgent = withContext(Dispatchers.Main) {
+                    try {
+                        WebSettings.getDefaultUserAgent(context)
+                    } catch (_: IllegalArgumentException) {
+                        null
+                    }
+                }
+                userAgentResolved = true
             }
+            userAgent
         }
 
         this.ifa = withContext(Dispatchers.IO) {
             try {
                 AdvertisingIdClient.getAdvertisingIdInfo(context).id.toString()
-            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
                 null
             }
         }
-        this.macSha1 = sha1(DeviceUtils.getMacAddress())
+        // MAC discovery can spawn shell processes; it is optional request metadata.
+        this.macSha1 = null
 
         if (ActivityCompat.checkSelfPermission(
                 context,

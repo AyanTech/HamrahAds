@@ -1,9 +1,10 @@
 package ir.ayantech.hamrahads.ads.interstitial
 
-import ir.ayantech.hamrahads.model.error.AdError
+import android.R as AndroidR
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
+import kotlin.time.Duration
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -12,7 +13,9 @@ import android.view.View
 import android.view.WindowManager
 import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LifecycleOwner
 import ir.ayantech.hamrahads.R
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.di.AdDependencies
 import ir.ayantech.hamrahads.domain.model.InterstitialAd
 import ir.ayantech.hamrahads.domain.model.isDisplayable
@@ -26,18 +29,20 @@ import ir.ayantech.hamrahads.internal.presentation.interstitial.createTemplate2
 import ir.ayantech.hamrahads.internal.presentation.interstitial.createTemplate3
 import ir.ayantech.hamrahads.internal.util.handleIntent
 import ir.ayantech.hamrahads.listener.AdDisplayListener
+import ir.ayantech.hamrahads.model.error.AdError
 
 @MainThread
-class InterstitialAdView(
+class InterstitialAdView @JvmOverloads constructor(
     firstActivity: AppCompatActivity,
     private val zoneId: String,
     private val listener: AdDisplayListener,
+    loadedAd: LoadedAd<InterstitialAd>? = null,
+    lifecycleOwner: LifecycleOwner = firstActivity,
 ) {
-    private val session = AdViewSession(firstActivity, listener)
+    private val session = AdViewSession(firstActivity, listener, lifecycleOwner)
     private val dependencies = AdDependencies.get(firstActivity)
     private val images = AdImages(session)
-    private val tracking = AdTracking(session.tasks, dependencies.trackClick, dependencies.trackImpression,
-        { dependencies.cache.remove(zoneId) }, listener)
+    private lateinit var tracking: AdTracking
 
     init {
         session.tasks.launch("showInterstitial") {
@@ -46,8 +51,19 @@ class InterstitialAdView(
                 session.fail(AdError.INVALID_REQUEST)
                 return@launch
             }
-            val ad = dependencies.cache.getInterstitial(zoneId)
-            if (ad == null || !ad.isDisplayable()) {
+            val loaded = loadedAd ?: dependencies.cache.takeInterstitial(zoneId)
+            if (loaded == null || loaded.zoneId != zoneId || !loaded.acquire(session)) {
+                session.fail(AdError.AD_UNAVAILABLE)
+                return@launch
+            }
+            dependencies.cache.remove(loaded.id)
+            session.onDispose { loaded.release(session) }
+            tracking = AdTracking(
+                session.tasks, dependencies.trackClick, dependencies.trackImpression,
+                listener, loaded.events, dependencies.trackingTasks
+            )
+            val ad = loaded.ad
+            if (!ad.isDisplayable()) {
                 session.fail(AdError.AD_UNAVAILABLE)
                 return@launch
             }
@@ -67,7 +83,7 @@ class InterstitialAdView(
         }
         val dialog = createDialog(activity)
         val timers = InterstitialTimers()
-        var canClose = (ad.timeToSkip ?: 0) <= 0
+        var canClose = (ad.timeToSkip ?: Duration.ZERO) <= Duration.ZERO
         fun close() {
             if (!session.isActive) {
                 return
@@ -75,7 +91,9 @@ class InterstitialAdView(
             session.dispose()
             listener.onClose()
         }
-        val controls = InterstitialControls(activity, ad.cta,
+
+        val controls = InterstitialControls(
+            activity, ad.cta,
             onClick = {
                 if (session.isActive) {
                     tracking.click(ad.trackers?.click)
@@ -110,8 +128,12 @@ class InterstitialAdView(
                     if (ad.timeToSkip == null) {
                         controls.close.visibility = View.GONE
                     }
-                    timers.start(ad.timeToSkip,
-                        onTick = { controls.countdown.text = activity.getString(R.string.hamrah_ads_second, it.toString()) },
+                    timers.start(
+                        ad.timeToSkip,
+                        onTick = {
+                            controls.countdown.text =
+                                activity.getString(R.string.hamrah_ads_second, it.toString())
+                        },
                         onFinish = {
                             canClose = true
                             dialog.setCancelable(true)
@@ -130,16 +152,19 @@ class InterstitialAdView(
     }
 
     private fun createDialog(activity: AppCompatActivity): Dialog =
-        Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen).apply {
+        Dialog(activity, AndroidR.style.Theme_Black_NoTitleBar_Fullscreen).apply {
             window?.apply {
                 setBackgroundDrawable(ColorDrawable(Color.WHITE))
-                addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+                addFlags(
+                    WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                )
                 @Suppress("DEPRECATION")
                 decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    attributes.layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
                 }
             }
         }

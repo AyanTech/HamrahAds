@@ -11,7 +11,28 @@ import ir.ayantech.hamrahads.internal.presentation.AdViewSession
 
 /** Binds the host's named ad views, including clickable containers. Owns no network/tracking logic. */
 internal class NativeAdBinder(private val session: AdViewSession, private val images: AdImages) {
-    fun bind(view: View, ad: NativeAd, onClick: () -> Unit) {
+    fun bind(view: View, ad: NativeAd, onReady: () -> Unit = {}, onClick: () -> Unit) {
+        val pendingImages = mutableListOf<Pair<ImageView, String>>()
+        bindViews(view, ad, onClick, pendingImages)
+        if (pendingImages.isEmpty()) {
+            onReady()
+        } else {
+            var remaining = pendingImages.size
+            pendingImages.forEach { (target, url) ->
+                images.load(url, target) {
+                    remaining--
+                    if (remaining == 0 && session.isActive) onReady()
+                }
+            }
+        }
+    }
+
+    private fun bindViews(
+        view: View,
+        ad: NativeAd,
+        onClick: () -> Unit,
+        pending: MutableList<Pair<ImageView, String>>
+    ) {
         when (view.id) {
             R.id.hamrah_ad_native_title -> (view as? TextView)?.text = ad.caption
             R.id.hamrah_ad_native_description -> (view as? TextView)?.text = ad.description
@@ -19,12 +40,18 @@ internal class NativeAdBinder(private val session: AdViewSession, private val im
                 (view as? TextView)?.text = ad.cta
                 bindClick(view, onClick)
             }
+
             R.id.hamrah_ad_native_cta_view -> bindClick(view, onClick)
-            R.id.hamrah_ad_native_logo -> bindImage(view, ad.logo)
-            R.id.hamrah_ad_native_banner -> bindImage(view, ad.banner1136x640)
+            R.id.hamrah_ad_native_logo -> bindImage(view, ad.logo, pending)
+            R.id.hamrah_ad_native_banner -> bindImage(view, ad.banner1136x640, pending)
         }
         if (view is ViewGroup) {
-            for (index in 0 until view.childCount) bind(view.getChildAt(index), ad, onClick)
+            for (index in 0 until view.childCount) bindViews(
+                view.getChildAt(index),
+                ad,
+                onClick,
+                pending
+            )
         }
     }
 
@@ -37,9 +64,10 @@ internal class NativeAdBinder(private val session: AdViewSession, private val im
         session.onDispose { view.setOnClickListener(null) }
     }
 
-    private fun bindImage(view: View, url: String?) {
-        if (view is ImageView && !url.isNullOrBlank()) {
-            images.load(url, view)
+    private fun bindImage(view: View, url: String?, pending: MutableList<Pair<ImageView, String>>) {
+        if (view is ImageView) {
+            view.setImageDrawable(null)
+            if (!url.isNullOrBlank()) pending += view to url
         }
     }
 }

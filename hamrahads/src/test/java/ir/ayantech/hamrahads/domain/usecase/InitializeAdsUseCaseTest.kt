@@ -1,14 +1,17 @@
 package ir.ayantech.hamrahads.domain.usecase
 
-import ir.ayantech.hamrahads.domain.model.*
+import ir.ayantech.hamrahads.domain.model.AdResult
 import ir.ayantech.hamrahads.model.error.HamrahAdsError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.fail
 import org.junit.Test
 
 class InitializeAdsUseCaseTest {
-    @Test fun `successful initialization saves the requested key`() = runTest {
+    @Test
+    fun `successful initialization saves the requested key`() = runTest {
         var saved: String? = null
         var calls = 0
         val useCase: InitializeAdsUseCase = InitializeAdsUseCaseImpl(
@@ -21,7 +24,8 @@ class InitializeAdsUseCaseTest {
         assertEquals(1, calls)
     }
 
-    @Test fun `same key skips network and storage writes`() = runTest {
+    @Test
+    fun `same key skips network and storage writes`() = runTest {
         val useCase = InitializeAdsUseCaseImpl(
             cachedAppKey = { "key" }, initialize = { error("Must not initialize") },
             saveAppKey = { error("Must not save") },
@@ -29,30 +33,40 @@ class InitializeAdsUseCaseTest {
         assertEquals(AdResult.Success(Unit), useCase("key"))
     }
 
-    @Test fun `blank key fails without reading cache or calling network`() = runTest {
+    @Test
+    fun `blank key fails without reading cache or calling network`() = runTest {
         val useCase = InitializeAdsUseCaseImpl(
-            cachedAppKey = { error("Must not read") }, initialize = { error("Must not initialize") },
+            cachedAppKey = { error("Must not read") },
+            initialize = { error("Must not initialize") },
             saveAppKey = { error("Must not save") },
         )
         assertEquals("G00019", (useCase(" ") as AdResult.Error).errorResponse.code)
     }
 
-    @Test fun `failed initialization does not save key`() = runTest {
+    @Test
+    fun `failed initialization does not save key`() = runTest {
         val failure = AdResult.Error(HamrahAdsError(code = "rejected"))
         val useCase = InitializeAdsUseCaseImpl(
-            cachedAppKey = { "old" }, initialize = { failure }, saveAppKey = { error("Must not save") },
+            cachedAppKey = { "old" },
+            initialize = { failure },
+            saveAppKey = { error("Must not save") },
         )
         assertSame(failure, useCase("new"))
     }
 
-    @Test fun `cancelled initialization does not save key`() = runTest {
+    @Test
+    fun `cancelled initialization does not save key`() = runTest {
         val cancellation = CancellationException("cancelled")
         val useCase = InitializeAdsUseCaseImpl(
-            cachedAppKey = { "" }, initialize = { throw cancellation }, saveAppKey = { error("Must not save") },
+            cachedAppKey = { "" },
+            initialize = { throw cancellation },
+            saveAppKey = { error("Must not save") },
         )
         try {
             useCase("key")
             fail("Expected cancellation")
-        } catch (actual: CancellationException) { assertSame(cancellation, actual) }
+        } catch (actual: CancellationException) {
+            assertSame(cancellation, actual)
+        }
     }
 }

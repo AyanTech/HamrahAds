@@ -9,8 +9,10 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.ads.native.NativeAdLoader
 import ir.ayantech.hamrahads.ads.native.NativeAdView
+import ir.ayantech.hamrahads.domain.model.NativeAd
 import ir.ayantech.hamrahads.example.databinding.FragmentNativeBinding
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
@@ -39,7 +41,9 @@ class NativeFragment : Fragment() {
 
     private fun destroy() {
         nativeAdView?.destroyAds()
+        nativeAdView = null
         nativeAdLoader?.cancelRequest()
+        nativeAdLoader = null
     }
 
     private var nativeAdView:    NativeAdView? = null
@@ -48,13 +52,16 @@ class NativeFragment : Fragment() {
     private fun requestNativeAds() {
         nativeAdLoader = HamrahAds.RequestNativeAds()
             .setContext(requireActivity())
+            .setLifecycleOwner(viewLifecycleOwner)
             .initId("d3f8b412-e4a9-4373-861f-4836dab21939")
             .initListener(object : RequestListener {
-                override fun onSuccess() {
+                override fun onNativeAdLoaded(ad: LoadedAd<NativeAd>) {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestNativeAds"
 
                     nativeAdView = HamrahAds.ShowNativeAds()
+                        .setAd(ad)
+                        .setLifecycleOwner(viewLifecycleOwner)
                         .setContext(requireActivity() as AppCompatActivity)
                         .initId("d3f8b412-e4a9-4373-861f-4836dab21939")
                         .setViewGroup(binding.nativeView)

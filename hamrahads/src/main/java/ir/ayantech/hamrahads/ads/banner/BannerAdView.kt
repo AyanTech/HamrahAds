@@ -7,6 +7,8 @@ import android.widget.ImageView
 import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.lifecycle.LifecycleOwner
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.di.AdDependencies
 import ir.ayantech.hamrahads.domain.model.BannerAd
 import ir.ayantech.hamrahads.domain.model.imageUrl
@@ -21,21 +23,19 @@ import ir.ayantech.hamrahads.model.enums.BannerSize
 import ir.ayantech.hamrahads.model.error.AdError
 
 @MainThread
-class BannerAdView(
+class BannerAdView @JvmOverloads constructor(
     firstActivity: AppCompatActivity,
     private val size: BannerSize,
     private val zoneId: String,
     private var viewGroup: ViewGroup? = null,
     private val listener: AdDisplayListener,
+    loadedAd: LoadedAd<BannerAd>? = null,
+    lifecycleOwner: LifecycleOwner = firstActivity,
 ) {
-    private val session = AdViewSession(firstActivity, listener)
+    private val session = AdViewSession(firstActivity, listener, lifecycleOwner)
     private val dependencies = AdDependencies.get(firstActivity)
     private val images = AdImages(session)
-    private val tracking =
-        AdTracking(
-            session.tasks, dependencies.trackClick, dependencies.trackImpression,
-            { dependencies.cache.remove(zoneId) }, listener
-        )
+    private lateinit var tracking: AdTracking
 
     init {
         session.onDispose { viewGroup = null }
@@ -45,8 +45,19 @@ class BannerAdView(
                 session.fail(AdError.INVALID_REQUEST)
                 return@launch
             }
-            val ad = dependencies.cache.getBanner(zoneId)
-            if (ad == null || !ad.isDisplayable(size)) {
+            val loaded = loadedAd ?: dependencies.cache.takeBanner(zoneId)
+            if (loaded == null || loaded.zoneId != zoneId || !loaded.acquire(session)) {
+                session.fail(AdError.AD_UNAVAILABLE)
+                return@launch
+            }
+            dependencies.cache.remove(loaded.id)
+            session.onDispose { loaded.release(session) }
+            tracking = AdTracking(
+                session.tasks, dependencies.trackClick, dependencies.trackImpression,
+                listener, loaded.events, dependencies.trackingTasks
+            )
+            val ad = loaded.ad
+            if (!ad.isDisplayable(size)) {
                 session.fail(AdError.AD_UNAVAILABLE)
                 return@launch
             }
@@ -55,6 +66,11 @@ class BannerAdView(
     }
 
     private fun render(activity: AppCompatActivity, ad: BannerAd) {
+        val targetWidth =
+            viewGroup?.width?.takeIf { it > 0 } ?: activity.resources.displayMetrics.widthPixels
+        val (creativeWidth, creativeHeight) = size.getSize()
+        val targetHeight =
+            (targetWidth.toLong() * creativeHeight / creativeWidth).toInt().coerceAtLeast(1)
         val container = FrameLayout(activity)
         val params = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -65,7 +81,7 @@ class BannerAdView(
         val image = AppCompatImageView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                targetHeight
             )
             scaleType = ImageView.ScaleType.FIT_XY
             adjustViewBounds = true
@@ -88,7 +104,9 @@ class BannerAdView(
             listener.onLoaded()
             if (session.isActive) {
                 val observer =
-                    VisibleImpressionObserver(image) { tracking.impression(ad.trackers?.impression) }
+                    VisibleImpressionObserver(
+                        image,
+                        { session.isStarted }) { tracking.impression(ad.trackers?.impression) }
                 session.onDispose(observer::dispose)
                 observer.start()
             }

@@ -9,8 +9,10 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
-import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdView
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdLoader
+import ir.ayantech.hamrahads.ads.interstitial.InterstitialAdView
+import ir.ayantech.hamrahads.domain.model.InterstitialAd
 import ir.ayantech.hamrahads.example.databinding.FragmentInterstitialBinding
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
@@ -41,6 +43,7 @@ class InterstitialFragment : Fragment() {
     private fun destroy() {
         interstitialAdview?.destroyAds()
         interstitialAdLoader?.cancelRequest()
+        interstitialAdLoader = null
     }
 
     private var interstitialAdview: InterstitialAdView? = null
@@ -51,10 +54,12 @@ class InterstitialFragment : Fragment() {
             .setContext(requireContext())
             .initId("094afc16-54fa-4738-b893-01fdf01ff330")
             .initListener(object : RequestListener {
-                override fun onSuccess() {
+                override fun onInterstitialAdLoaded(ad: LoadedAd<InterstitialAd>) {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestInterstitialAds"
                     interstitialAdview = HamrahAds.ShowInterstitialAds()
+                        .setAd(ad)
+                        .setLifecycleOwner(viewLifecycleOwner)
                         .initId("094afc16-54fa-4738-b893-01fdf01ff330")
                         .setContext(requireActivity() as AppCompatActivity)
                         .initListener(object : ShowListener {

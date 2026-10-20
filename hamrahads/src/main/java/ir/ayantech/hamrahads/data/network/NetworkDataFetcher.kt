@@ -1,9 +1,9 @@
 package ir.ayantech.hamrahads.data.network
 
+import ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics
 import ir.ayantech.hamrahads.model.error.AdError
 import ir.ayantech.hamrahads.model.error.ErrorType
 import ir.ayantech.hamrahads.model.error.HamrahAdsError
-import ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import retrofit2.Response

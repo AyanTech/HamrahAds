@@ -7,10 +7,12 @@ import android.view.ViewTreeObserver
 /** Observes one view until at least half of each dimension is visible, then detaches itself. */
 internal class VisibleImpressionObserver(
     private val view: View,
+    private val eligible: () -> Boolean = { true },
     private val onVisible: () -> Unit,
 ) : ViewTreeObserver.OnPreDrawListener, View.OnAttachStateChangeListener {
     private var disposed = false
     private var observer: ViewTreeObserver? = null
+    private val visible = Rect()
 
     fun start() {
         if (disposed) {
@@ -27,13 +29,13 @@ internal class VisibleImpressionObserver(
     }
 
     private fun checkVisibility() {
-        if (disposed || !view.isShown || view.alpha <= 0f) {
+        if (disposed || !eligible() || !view.isAttachedToWindow || !view.isShown || view.alpha <= 0f) {
             return
         }
-        val visible = Rect()
         if (view.getGlobalVisibleRect(visible) && isSufficientlyVisible(
                 view.width, view.height, visible.width(), visible.height()
-            )) {
+            )
+        ) {
             dispose()
             onVisible()
         }
@@ -43,10 +45,12 @@ internal class VisibleImpressionObserver(
         checkVisibility()
         return true
     }
+
     override fun onViewAttachedToWindow(v: View) {
         observe()
         checkVisibility()
     }
+
     override fun onViewDetachedFromWindow(v: View) {
         observer?.takeIf { it.isAlive }?.removeOnPreDrawListener(this)
         observer = null
@@ -63,5 +67,10 @@ internal class VisibleImpressionObserver(
     }
 }
 
-internal fun isSufficientlyVisible(width: Int, height: Int, visibleWidth: Int, visibleHeight: Int): Boolean =
+internal fun isSufficientlyVisible(
+    width: Int,
+    height: Int,
+    visibleWidth: Int,
+    visibleHeight: Int
+): Boolean =
     width > 0 && height > 0 && visibleWidth.toLong() * 2 >= width && visibleHeight.toLong() * 2 >= height
