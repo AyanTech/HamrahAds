@@ -5,7 +5,7 @@ plugins {
     id("maven-publish")
 }
 
-val hamrahAdsSdkVersion = "0.1.44"
+val hamrahAdsSdkVersion = "2.1.0"
 
 android {
     namespace = "ir.ayantech.hamrahads"

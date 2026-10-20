@@ -8,10 +8,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import ir.ayantech.hamrahads.data.dto.BannerAdDto
 import ir.ayantech.hamrahads.data.dto.InterstitialAdDto
 import ir.ayantech.hamrahads.data.dto.NativeAdDto
+import ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-
 
 private val Context.dataStore by preferencesDataStore(
     name = "HamrahAdsPreference"
@@ -94,24 +95,31 @@ class PreferenceDataStoreHelper(
         val encoded = dataSource.data.first()[stringPreferencesKey(key)] ?: return null
         return try {
             json.decodeFromString<T>(encoded)
-        } catch (_: kotlinx.serialization.SerializationException) {
-            ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event("adCache", "invalid JSON")
+        } catch (_: SerializationException) {
+            AdDiagnostics.event("adCache", "invalid JSON")
             null
         } catch (_: IllegalArgumentException) {
-            ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics.event("adCache", "invalid value")
+            AdDiagnostics.event("adCache", "invalid value")
             null
         }
     }
 
     override suspend fun putPreferenceBanner(key: String, value: BannerAdDto) = writeAd(key, value)
     override suspend fun putPreferenceNative(key: String, value: NativeAdDto) = writeAd(key, value)
-    override suspend fun putPreferenceInterstitial(key: String, value: InterstitialAdDto) = writeAd(key, value)
+    override suspend fun putPreferenceInterstitial(key: String, value: InterstitialAdDto) =
+        writeAd(key, value)
 
     override suspend fun getPreferenceBannerCoroutine(key: String): BannerAdDto? = readAd(key)
     override suspend fun getPreferenceNativeCoroutine(key: String): NativeAdDto? = readAd(key)
-    override suspend fun getPreferenceInterstitialCoroutine(key: String): InterstitialAdDto? = readAd(key)
+    override suspend fun getPreferenceInterstitialCoroutine(key: String): InterstitialAdDto? =
+        readAd(key)
 
-    override fun getPreferenceBanner(key: String): BannerAdDto? = runBlocking { getPreferenceBannerCoroutine(key) }
-    override fun getPreferenceNative(key: String): NativeAdDto? = runBlocking { getPreferenceNativeCoroutine(key) }
-    override fun getPreferenceInterstitial(key: String): InterstitialAdDto? = runBlocking { getPreferenceInterstitialCoroutine(key) }
+    override fun getPreferenceBanner(key: String): BannerAdDto? =
+        runBlocking { getPreferenceBannerCoroutine(key) }
+
+    override fun getPreferenceNative(key: String): NativeAdDto? =
+        runBlocking { getPreferenceNativeCoroutine(key) }
+
+    override fun getPreferenceInterstitial(key: String): InterstitialAdDto? =
+        runBlocking { getPreferenceInterstitialCoroutine(key) }
 }

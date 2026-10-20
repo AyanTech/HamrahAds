@@ -63,7 +63,11 @@ object DeviceUtils {
             val networkInterfaces = NetworkInterface.getNetworkInterfaces()
             while (networkInterfaces.hasMoreElements()) {
                 val networkInterface = networkInterfaces.nextElement()
-                if (networkInterface == null || !networkInterface.name.equals("wlan0", ignoreCase = true)) continue
+                if (networkInterface == null || !networkInterface.name.equals(
+                        "wlan0",
+                        ignoreCase = true
+                    )
+                ) continue
                 val macBytes = networkInterface.hardwareAddress ?: continue
                 return macBytes.joinToString(":") { "%02x".format(it) }
             }
@@ -76,7 +80,8 @@ object DeviceUtils {
     private fun getMacAddressByInetAddress(): String {
         try {
             val inetAddress = getInetAddress() ?: return "02:00:00:00:00:00"
-            val networkInterface = NetworkInterface.getByInetAddress(inetAddress) ?: return "02:00:00:00:00:00"
+            val networkInterface =
+                NetworkInterface.getByInetAddress(inetAddress) ?: return "02:00:00:00:00:00"
             val macBytes = networkInterface.hardwareAddress ?: return "02:00:00:00:00:00"
             return macBytes.joinToString(":") { "%02x".format(it) }
         } catch (e: Exception) {

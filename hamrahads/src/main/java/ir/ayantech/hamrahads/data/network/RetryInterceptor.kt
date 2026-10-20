@@ -2,12 +2,11 @@ package ir.ayantech.hamrahads.data.network
 
 import ir.ayantech.hamrahads.model.error.AdError
 import ir.ayantech.hamrahads.model.error.ErrorType
-import ir.ayantech.hamrahads.model.error.HamrahAdsError
-import okhttp3.Interceptor
-import okhttp3.Response
 import java.io.IOException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLHandshakeException
+import okhttp3.Interceptor
+import okhttp3.Response
 
 class RetryInterceptor(
     private val maxRetries: Int = 3
@@ -47,7 +46,8 @@ class RetryInterceptor(
                 }
             }
         }
-        throw lastException ?: IOException(AdError.REQUEST_FAILED.toError(ErrorType.Remote).description)
+        throw lastException
+            ?: IOException(AdError.REQUEST_FAILED.toError(ErrorType.Remote).description)
     }
 
     private fun isRetryableRequest(request: okhttp3.Request): Boolean {

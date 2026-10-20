@@ -1,6 +1,5 @@
 package ir.ayantech.hamrahads.data.storage
 
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 

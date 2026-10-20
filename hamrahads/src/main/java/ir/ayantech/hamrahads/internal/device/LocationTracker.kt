@@ -8,9 +8,10 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import androidx.core.app.ActivityCompat
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-class LocationTracker (private val context: Context) {
+import kotlinx.coroutines.suspendCancellableCoroutine
+
+class LocationTracker(private val context: Context) {
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: LocationListener
 
@@ -28,7 +29,11 @@ class LocationTracker (private val context: Context) {
                     val latitude = location.latitude
                     val longitude = location.longitude
 
-                    try { onLocationReceived(latitude, longitude) } finally { stopTrackingLocation() }
+                    try {
+                        onLocationReceived(latitude, longitude)
+                    } finally {
+                        stopTrackingLocation()
+                    }
                 }
 
                 override fun onProviderEnabled(provider: String) {}
@@ -44,27 +49,32 @@ class LocationTracker (private val context: Context) {
         }
     }
 
-    suspend fun awaitLocation(): Pair<Double, Double>? = suspendCancellableCoroutine { continuation ->
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-        if (manager == null || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-            !manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            continuation.resume(null)
-            return@suspendCancellableCoroutine
-        }
-        if (!continuation.isActive) return@suspendCancellableCoroutine
-        try {
-            startTrackingLocation { latitude, longitude ->
-                if (continuation.isActive) continuation.resume(latitude to longitude)
+    suspend fun awaitLocation(): Pair<Double, Double>? =
+        suspendCancellableCoroutine { continuation ->
+            val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+            if (manager == null || ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED ||
+                !manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            ) {
+                continuation.resume(null)
+                return@suspendCancellableCoroutine
             }
-            continuation.invokeOnCancellation { stopTrackingLocation() }
-        } catch (_: SecurityException) {
-            stopTrackingLocation()
-            if (continuation.isActive) continuation.resume(null)
-        } catch (_: IllegalArgumentException) {
-            stopTrackingLocation()
-            if (continuation.isActive) continuation.resume(null)
+            if (!continuation.isActive) return@suspendCancellableCoroutine
+            try {
+                startTrackingLocation { latitude, longitude ->
+                    if (continuation.isActive) continuation.resume(latitude to longitude)
+                }
+                continuation.invokeOnCancellation { stopTrackingLocation() }
+            } catch (_: SecurityException) {
+                stopTrackingLocation()
+                if (continuation.isActive) continuation.resume(null)
+            } catch (_: IllegalArgumentException) {
+                stopTrackingLocation()
+                if (continuation.isActive) continuation.resume(null)
+            }
         }
-    }
 
     @SuppressLint("MissingPermission")
     private fun stopTrackingLocation() {

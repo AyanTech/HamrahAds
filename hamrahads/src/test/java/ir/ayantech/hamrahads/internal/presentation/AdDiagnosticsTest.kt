@@ -1,7 +1,8 @@
 package ir.ayantech.hamrahads.internal.presentation
 
 import ir.ayantech.hamrahads.internal.diagnostics.AdDiagnostics
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -11,7 +12,8 @@ import org.robolectric.shadows.ShadowLog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class AdDiagnosticsTest {
-    @Test fun `disabled diagnostics are silent and enabled failures omit exception messages`() {
+    @Test
+    fun `disabled diagnostics are silent and enabled failures omit exception messages`() {
         ShadowLog.clear()
         AdDiagnostics.enabled = false
         AdDiagnostics.failure("image", IllegalStateException("token=secret"))
@@ -23,6 +25,8 @@ class AdDiagnosticsTest {
             assertTrue(message.contains("IllegalStateException"))
             assertTrue(message.contains("AdDiagnosticsTest"))
             assertFalse(message.contains("secret"))
-        } finally { AdDiagnostics.enabled = false }
+        } finally {
+            AdDiagnostics.enabled = false
+        }
     }
 }

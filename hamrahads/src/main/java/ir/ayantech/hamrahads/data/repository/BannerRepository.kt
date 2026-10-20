@@ -1,11 +1,11 @@
 package ir.ayantech.hamrahads.data.repository
 
-import ir.ayantech.hamrahads.internal.device.DeviceInfo
 import ir.ayantech.hamrahads.data.dto.ApiResponseDto
 import ir.ayantech.hamrahads.data.dto.BannerAdDto
 import ir.ayantech.hamrahads.data.network.NetworkClient
 import ir.ayantech.hamrahads.data.network.NetworkDataFetcher
 import ir.ayantech.hamrahads.data.network.NetworkResult
+import ir.ayantech.hamrahads.internal.device.DeviceInfo
 
 class BannerRepository(private val networkClient: NetworkClient) {
 

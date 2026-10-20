@@ -121,8 +121,10 @@ object ShellUtils {
             if (isNeedResultMsg) {
                 successMsg = StringBuilder()
                 errorMsg = StringBuilder()
-                successResult = BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8))
-                errorResult = BufferedReader(InputStreamReader(process.errorStream, StandardCharsets.UTF_8))
+                successResult =
+                    BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8))
+                errorResult =
+                    BufferedReader(InputStreamReader(process.errorStream, StandardCharsets.UTF_8))
                 var line: String?
                 if (successResult.readLine().also { line = it } != null) {
                     successMsg.append(line)

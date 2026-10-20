@@ -1,18 +1,44 @@
 package ir.ayantech.hamrahads.data.storage
 
-import ir.ayantech.hamrahads.data.mapper.toDomain
-import ir.ayantech.hamrahads.data.mapper.toDto
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.domain.model.BannerAd
 import ir.ayantech.hamrahads.domain.model.InterstitialAd
 import ir.ayantech.hamrahads.domain.model.NativeAd
 
-/** Domain-facing cache boundary; presentation never handles serialized DTOs. */
-internal class AdCache(private val preferences: IPreferenceDataStoreAPI) {
-    suspend fun getBanner(zoneId: String): BannerAd? = preferences.getPreferenceBannerCoroutine(zoneId)?.toDomain()
-    suspend fun getNative(zoneId: String): NativeAd? = preferences.getPreferenceNativeCoroutine(zoneId)?.toDomain()
-    suspend fun getInterstitial(zoneId: String): InterstitialAd? = preferences.getPreferenceInterstitialCoroutine(zoneId)?.toDomain()
-    suspend fun putBanner(zoneId: String, ad: BannerAd) = preferences.putPreferenceBanner(zoneId, ad.toDto())
-    suspend fun putNative(zoneId: String, ad: NativeAd) = preferences.putPreferenceNative(zoneId, ad.toDto())
-    suspend fun putInterstitial(zoneId: String, ad: InterstitialAd) = preferences.putPreferenceInterstitial(zoneId, ad.toDto())
-    suspend fun remove(zoneId: String) = preferences.removePreferenceCoroutine(zoneId)
+/**
+ * Bounded, in-memory handoff for request(zone)/show(zone). New callers pass LoadedAd directly.
+ * Entries are removed when acquired, never by tracking.
+ */
+internal class AdCache(private val capacity: Int = 16) {
+    private val ads = LinkedHashMap<String, LoadedAd<*>>()
+
+    init {
+        require(capacity > 0)
+    }
+
+    @Synchronized
+    fun put(ad: LoadedAd<*>) {
+        ads.entries.removeAll { it.value.isExpired }
+        ads[ad.id] = ad
+        while (ads.size > capacity) ads.remove(ads.keys.first())
+    }
+
+    @Synchronized
+    fun remove(id: String) {
+        ads.remove(id)
+    }
+
+    @Synchronized
+    private fun <T : Any> take(zoneId: String, type: Class<T>): LoadedAd<T>? {
+        ads.entries.removeAll { it.value.isExpired }
+        val entry =
+            ads.values.firstOrNull { it.zoneId == zoneId && type.isInstance(it.ad) } ?: return null
+        ads.remove(entry.id)
+        @Suppress("UNCHECKED_CAST")
+        return entry as LoadedAd<T>
+    }
+
+    fun takeBanner(zoneId: String) = take(zoneId, BannerAd::class.java)
+    fun takeNative(zoneId: String) = take(zoneId, NativeAd::class.java)
+    fun takeInterstitial(zoneId: String) = take(zoneId, InterstitialAd::class.java)
 }

@@ -1,5 +1,7 @@
 package ir.ayantech.hamrahads.domain.model
 
+import kotlin.time.Duration
+
 data class InterstitialAd(
     val caption: String? = null,
     val description: String? = null,
@@ -11,7 +13,7 @@ data class InterstitialAd(
     val landingLink: String? = null,
     val interstitialTemplate: Int? = null,
     val webTemplateUrl: String? = null,
-    val timeToSkip: Int? = null,
-    val timeOut: Int? = null,
+    val timeToSkip: Duration? = null,
+    val timeOut: Duration? = null,
     val trackers: Tracker? = null,
 )

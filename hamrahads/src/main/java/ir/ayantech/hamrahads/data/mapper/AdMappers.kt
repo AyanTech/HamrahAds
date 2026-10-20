@@ -8,6 +8,7 @@ import ir.ayantech.hamrahads.domain.model.BannerAd
 import ir.ayantech.hamrahads.domain.model.InterstitialAd
 import ir.ayantech.hamrahads.domain.model.NativeAd
 import ir.ayantech.hamrahads.domain.model.Tracker
+import kotlin.time.Duration.Companion.seconds
 
 internal fun BannerAdDto.toDomain(): BannerAd = BannerAd(
     banner320x50 = banner320x50,
@@ -50,8 +51,8 @@ internal fun NativeAdDto.toDomain(): NativeAd = NativeAd(
     landingLink = landingLink,
     interstitialTemplate = interstitialTemplate,
     webTemplateUrl = webTemplateUrl,
-    timeToSkip = timeToSkip,
-    timeOut = timeOut,
+    timeToSkip = timeToSkip?.seconds,
+    timeOut = timeOut?.seconds,
     trackers = trackers?.toDomain(),
 )
 
@@ -68,8 +69,8 @@ internal fun NativeAd.toDto(): NativeAdDto = NativeAdDto(
     landingLink = landingLink,
     interstitialTemplate = interstitialTemplate,
     webTemplateUrl = webTemplateUrl,
-    timeToSkip = timeToSkip,
-    timeOut = timeOut,
+    timeToSkip = timeToSkip?.inWholeSeconds?.toInt(),
+    timeOut = timeOut?.inWholeSeconds?.toInt(),
     trackers = trackers?.toDto(),
 )
 
@@ -84,8 +85,8 @@ internal fun InterstitialAdDto.toDomain(): InterstitialAd = InterstitialAd(
     landingLink = landingLink,
     interstitialTemplate = interstitialTemplate,
     webTemplateUrl = webTemplateUrl,
-    timeToSkip = timeToSkip,
-    timeOut = timeOut,
+    timeToSkip = timeToSkip?.seconds,
+    timeOut = timeOut?.seconds,
     trackers = trackers?.toDomain(),
 )
 
@@ -100,8 +101,8 @@ internal fun InterstitialAd.toDto(): InterstitialAdDto = InterstitialAdDto(
     landingLink = landingLink,
     interstitialTemplate = interstitialTemplate,
     webTemplateUrl = webTemplateUrl,
-    timeToSkip = timeToSkip,
-    timeOut = timeOut,
+    timeToSkip = timeToSkip?.inWholeSeconds?.toInt(),
+    timeOut = timeOut?.inWholeSeconds?.toInt(),
     trackers = trackers?.toDto(),
 )
 

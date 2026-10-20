@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.annotation.NonNull
-import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 
@@ -69,7 +68,10 @@ class PermissionUtils private constructor(vararg permissions: String) {
         fun getPermissions(packageName: String): List<String> {
             val pm = Utils.getApp().packageManager
             return try {
-                pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS).requestedPermissions?.toList() ?: emptyList()
+                pm.getPackageInfo(
+                    packageName,
+                    PackageManager.GET_PERMISSIONS
+                ).requestedPermissions?.toList() ?: emptyList()
             } catch (e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
                 emptyList()
@@ -88,7 +90,10 @@ class PermissionUtils private constructor(vararg permissions: String) {
 
         private fun isGranted(permission: String): Boolean {
             return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-                    ContextCompat.checkSelfPermission(Utils.getApp(), permission) == PackageManager.PERMISSION_GRANTED
+                    ContextCompat.checkSelfPermission(
+                        Utils.getApp(),
+                        permission
+                    ) == PackageManager.PERMISSION_GRANTED
         }
 
         /**
@@ -286,7 +291,11 @@ class PermissionUtils private constructor(vararg permissions: String) {
             }
         }
 
-        override fun onRequestPermissionsResult(requestCode: Int, @NonNull permissions: Array<out String>, @NonNull grantResults: IntArray) {
+        override fun onRequestPermissionsResult(
+            requestCode: Int,
+            @NonNull permissions: Array<out String>,
+            @NonNull grantResults: IntArray
+        ) {
             sInstance?.onRequestPermissionsResult(this)
             finish()
         }

@@ -1,14 +1,19 @@
 package ir.ayantech.hamrahads.domain.usecase
 
-import ir.ayantech.hamrahads.domain.model.*
+import ir.ayantech.hamrahads.domain.model.AdRequest
+import ir.ayantech.hamrahads.domain.model.AdResult
+import ir.ayantech.hamrahads.domain.model.BannerAd
 import ir.ayantech.hamrahads.model.error.HamrahAdsError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.fail
 import org.junit.Test
 
 class LoadBannerAdUseCaseTest {
-    @Test fun `successful load forwards request and caches ad by zone`() = runTest {
+    @Test
+    fun `successful load forwards request and caches ad by zone`() = runTest {
         val request = AdRequest(zoneId = "zone", appVer = 7, lat = 35.7)
         val ad = BannerAd(landingLink = "https://example.test")
         var captured: AdRequest? = null
@@ -23,7 +28,8 @@ class LoadBannerAdUseCaseTest {
         assertEquals("zone" to ad, cached)
     }
 
-    @Test fun `blank zone fails before fetching or caching`() = runTest {
+    @Test
+    fun `blank zone fails before fetching or caching`() = runTest {
         val useCase = LoadBannerAdUseCaseImpl(
             appKey = { error("Must not read key") },
             fetch = { error("Must not fetch") },
@@ -35,15 +41,20 @@ class LoadBannerAdUseCaseTest {
         }
     }
 
-    @Test fun `missing app key fails before fetching`() = runTest {
+    @Test
+    fun `missing app key fails before fetching`() = runTest {
         val useCase = LoadBannerAdUseCaseImpl(
             appKey = { " " }, fetch = { error("Must not fetch") },
             cache = { _, _ -> error("Must not cache") },
         )
-        assertEquals("G00019", (useCase(AdRequest(zoneId = "zone")) as AdResult.Error).errorResponse.code)
+        assertEquals(
+            "G00019",
+            (useCase(AdRequest(zoneId = "zone")) as AdResult.Error).errorResponse.code
+        )
     }
 
-    @Test fun `remote error propagates without caching`() = runTest {
+    @Test
+    fun `remote error propagates without caching`() = runTest {
         val failure = AdResult.Error(HamrahAdsError(code = "server-error"))
         val useCase = LoadBannerAdUseCaseImpl(
             appKey = { "key" }, fetch = { failure },
@@ -52,7 +63,8 @@ class LoadBannerAdUseCaseTest {
         assertSame(failure, useCase(AdRequest(zoneId = "zone")))
     }
 
-    @Test fun `cancellation propagates without caching`() = runTest {
+    @Test
+    fun `cancellation propagates without caching`() = runTest {
         val cancellation = CancellationException("cancelled")
         val useCase = LoadBannerAdUseCaseImpl(
             appKey = { "key" }, fetch = { throw cancellation },
@@ -61,6 +73,8 @@ class LoadBannerAdUseCaseTest {
         try {
             useCase(AdRequest(zoneId = "zone"))
             fail("Expected cancellation")
-        } catch (actual: CancellationException) { assertSame(cancellation, actual) }
+        } catch (actual: CancellationException) {
+            assertSame(cancellation, actual)
+        }
     }
 }

@@ -2,6 +2,8 @@
 
 # HamrahAds SDK (Android)
 
+For concurrent placements and recycled views, use the [2.1 loaded-ad and lifecycle APIs](docs/lifecycle-and-loaded-ads.md).
+
 HamrahAds is an Android advertising SDK for Kotlin and Java, with support for **banner**, **interstitial**, and **native** ads.
 
 ---

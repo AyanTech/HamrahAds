@@ -1,9 +1,9 @@
 package ir.ayantech.hamrahads.internal.util
 
+import android.R as AndroidR
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -11,12 +11,12 @@ import android.view.ViewTreeObserver
 
 object KeyboardUtils {
 
-      fun setKeyboardVisibilityListener(
+    fun setKeyboardVisibilityListener(
         activity: Activity,
         onKeyboardVisibilityListener: BooleanCallBack
     ) {
         activity.apply {
-            val parentView = (findViewById<View>(android.R.id.content) as? ViewGroup)?.getChildAt(0)
+            val parentView = (findViewById<View>(AndroidR.id.content) as? ViewGroup)?.getChildAt(0)
             parentView?.viewTreeObserver?.addOnGlobalLayoutListener(object :
                 ViewTreeObserver.OnGlobalLayoutListener {
                 var alreadyOpen = false

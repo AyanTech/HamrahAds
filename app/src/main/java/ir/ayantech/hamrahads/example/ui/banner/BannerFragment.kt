@@ -9,8 +9,10 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import ir.ayantech.hamrahads.HamrahAds
+import ir.ayantech.hamrahads.ads.LoadedAd
 import ir.ayantech.hamrahads.ads.banner.BannerAdLoader
 import ir.ayantech.hamrahads.ads.banner.BannerAdView
+import ir.ayantech.hamrahads.domain.model.BannerAd
 import ir.ayantech.hamrahads.example.databinding.FragmentBannerBinding
 import ir.ayantech.hamrahads.listener.RequestListener
 import ir.ayantech.hamrahads.listener.ShowListener
@@ -40,7 +42,9 @@ class BannerFragment : Fragment() {
 
     private fun destroy() {
         bannerAdView?.destroyAds()
+        bannerAdView = null
         bannerAdLoader?.cancelRequest()
+        bannerAdLoader = null
     }
 
     private var bannerAdView: BannerAdView? = null
@@ -51,11 +55,13 @@ class BannerFragment : Fragment() {
             .setContext(requireContext())
             .initId("e17beb85-1b7e-40f1-a312-ab947840590e")
             .initListener(object : RequestListener {
-                override fun onSuccess() {
+                override fun onBannerAdLoaded(ad: LoadedAd<BannerAd>) {
                     Log.i("wqepgojqpofgjegqw", "onSuccess")
                     binding.textStatus.text = "onSuccess RequestBannerAds"
 
                     bannerAdView = HamrahAds.ShowBannerAds()
+                        .setAd(ad)
+                        .setLifecycleOwner(viewLifecycleOwner)
                         .setContext(requireActivity() as AppCompatActivity)
                         .setSize(BannerSize.BANNER_320x50)
                         .initId("e17beb85-1b7e-40f1-a312-ab947840590e")

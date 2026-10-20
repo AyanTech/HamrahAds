@@ -2,11 +2,12 @@ package ir.ayantech.hamrahads.data.network
 
 import android.content.Context
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import java.util.concurrent.TimeUnit
 
 class NetworkClient(private val context: Context) {
 
@@ -27,10 +28,10 @@ class NetworkClient(private val context: Context) {
             .retryOnConnectionFailure(false)
             .addInterceptor(HeaderInterceptor(context))
             .addInterceptor(RetryInterceptor())
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
-            .callTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(5.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+            .readTimeout(30.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+            .writeTimeout(15.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+            .callTimeout(30.seconds.inWholeMilliseconds, TimeUnit.MILLISECONDS)
             .build()
     }
 
